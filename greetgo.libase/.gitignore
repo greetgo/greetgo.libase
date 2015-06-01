@@ -1,4 +1,12 @@
 /.gradle
+/bin
+/.settings
+/.classpath
+/.project
 /test-output
 /build
-/bin
+/.gwt
+/.gwt-tmp
+/tomcat
+/war
+/*.log

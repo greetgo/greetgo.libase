@@ -27,8 +27,6 @@ eclipse {
     sourceCompatibility = 1.7
     targetCompatibility = 1.7
   }
-
-  pathVariables 'GRADLE_USER_HOME': gradle.gradleUserHomeDir
 }
 
 project.eclipse.classpath.file.whenMerged { cp ->
@@ -46,7 +44,6 @@ repositories {
       name 'Our repository'
       url 'http://192.168.11.11:8080/repository/internal/'
     }
-  mavenCentral()
 }
 
 dependencies {
