@@ -39,11 +39,11 @@ public class SqlGeneratorOracle implements SqlGenerator {
         continue;
       }
       
-      addGenerateedChanges(sqlResult, change);
+      addGeneratedChanges(sqlResult, change);
     }
   }
   
-  private void addGenerateedChanges(List<String> res, Change change) {
+  private void addGeneratedChanges(List<String> res, Change change) {
     if (change instanceof CreateRelation) {
       res.add(generateCreateRelation(((CreateRelation)change).relation));
       return;
@@ -82,12 +82,14 @@ public class SqlGeneratorOracle implements SqlGenerator {
       if (x.table.comment != null) {
         res.add(GeneratorAddon.generateTableComment(x.table));
       }
+      return;
     }
     if (change instanceof FieldComment) {
       FieldComment x = (FieldComment)change;
       if (x.field.comment != null) {
         res.add(GeneratorAddon.generateFieldComment(x.table, x.field));
       }
+      return;
     }
     
     throw new IllegalArgumentException("Unknown change " + change);

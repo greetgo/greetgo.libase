@@ -5,10 +5,12 @@ apply plugin: 'maven'
 group = 'kz.greetgo'
 
 sourceCompatibility = 1.7
-version = '1.0.2'
+version = '1.0.3'
 
 def nowDate = new Date()
 def nowFormattedDate = nowDate.format("yyyy-MM-dd/HH:mm:ss")
+
+eclipse.project.natures 'org.springsource.ide.eclipse.gradle.core.nature'
 
 jar {
   manifest {
@@ -38,6 +40,22 @@ project.eclipse.classpath.file.whenMerged { cp ->
     }
   }
 }
+
+sourceSets {
+  main {
+    resources.srcDirs = ["src/main/java", "src/main/resources"]
+  }
+  test {
+    resources.srcDirs = ["src/test/java", "src/test/resources"]
+  }
+}
+compileJava {
+  options.encoding = "UTF-8"
+}
+compileTestJava {
+  options.encoding = "UTF-8"
+}
+
 
 repositories {
     maven {
