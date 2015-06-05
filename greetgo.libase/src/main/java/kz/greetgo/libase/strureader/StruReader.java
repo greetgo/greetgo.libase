@@ -1,7 +1,9 @@
 package kz.greetgo.libase.strureader;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.logging.Logger;
 
 import kz.greetgo.libase.model.DbStru;
 import kz.greetgo.libase.model.Field;
@@ -15,10 +17,18 @@ import kz.greetgo.libase.model.Trigger;
 import kz.greetgo.libase.model.View;
 
 public class StruReader {
+  private static final Logger log = Logger.getLogger(StruReader.class.getName());
+  
   public static DbStru read(RowReader rowReader) throws Exception {
     DbStru ret = new DbStru();
     
-    for (ColumnRow colRow : rowReader.readAllTableColumns()) {
+    long t1 = System.currentTimeMillis();
+    List<ColumnRow> allTableColumns = rowReader.readAllTableColumns();
+    long t2 = System.currentTimeMillis();
+    
+    log.info("readAllTableColumns выполнено за " + (t2 - t1) + " мс");
+    
+    for (ColumnRow colRow : allTableColumns) {
       Table table = (Table)ret.relations.get(colRow.tableName);
       if (table == null) ret.relations.put(colRow.tableName, table = new Table(colRow.tableName));
       table.allFields.add(new Field(table, colRow.name, colRow.type, colRow.nullable,
@@ -26,7 +36,13 @@ public class StruReader {
       
     }
     
-    for (PrimaryKeyRow pkr : rowReader.readAllTablePrimaryKeys().values()) {
+    long t3 = System.currentTimeMillis();
+    Map<String, PrimaryKeyRow> allTablePrimaryKeys = rowReader.readAllTablePrimaryKeys();
+    long t4 = System.currentTimeMillis();
+    
+    log.info("readAllTablePrimaryKeys выполнено за " + (t4 - t3) + " мс");
+    
+    for (PrimaryKeyRow pkr : allTablePrimaryKeys.values()) {
       Table table = (Table)ret.relations.get(pkr.tableName);
       if (table == null) throw new NullPointerException("No table " + pkr.tableName);
       for (String fieldName : pkr.keyFieldNames) {
@@ -34,7 +50,13 @@ public class StruReader {
       }
     }
     
-    for (ForeignKeyRow fkr : rowReader.readAllForeignKeys().values()) {
+    long t5 = System.currentTimeMillis();
+    Map<String, ForeignKeyRow> allForeignKeys = rowReader.readAllForeignKeys();
+    long t6 = System.currentTimeMillis();
+    
+    log.info("readAllForeignKeys выполнено за " + (t6 - t5) + " мс");
+    
+    for (ForeignKeyRow fkr : allForeignKeys.values()) {
       Table from = (Table)ret.relations.get(fkr.fromTable);
       if (from == null) throw new NullPointerException("No table " + fkr.fromTable);
       Table to = (Table)ret.relations.get(fkr.toTable);
@@ -57,12 +79,22 @@ public class StruReader {
       ret.foreignKeys.add(fk);
     }
     
-    for (SequenceRow s : rowReader.readAllSequences().values()) {
+    long t7 = System.currentTimeMillis();
+    Map<String, SequenceRow> allSequences = rowReader.readAllSequences();
+    long t8 = System.currentTimeMillis();
+    
+    log.info("readAllSequences выполнено за " + (t8 - t7) + " мс");
+    
+    for (SequenceRow s : allSequences.values()) {
       ret.sequences.add(new Sequence(s.name, s.startFrom));
     }
     
     {
+      long t9 = System.currentTimeMillis();
       Map<String, ViewRow> viewRows = rowReader.readAllViews();
+      long t10 = System.currentTimeMillis();
+      
+      log.info("readAllViews выполнено за " + (t10 - t9) + " мс");
       
       for (ViewRow vr : viewRows.values()) {
         if (ret.relations.keySet().contains(vr.name)) {
@@ -84,7 +116,13 @@ public class StruReader {
     }
     
     {
-      for (StoreFuncRow sfr : rowReader.readAllFuncs()) {
+      long t11 = System.currentTimeMillis();
+      List<StoreFuncRow> allFuncs = rowReader.readAllFuncs();
+      long t12 = System.currentTimeMillis();
+      
+      log.info("readAllFuncs выполнено за " + (t12 - t11) + " мс");
+      
+      for (StoreFuncRow sfr : allFuncs) {
         StoreFunc f = new StoreFunc(sfr.name, sfr.argTypes);
         f.argNames.addAll(sfr.argNames);
         f.returns = sfr.returns;
@@ -95,7 +133,13 @@ public class StruReader {
     }
     
     {
-      for (TriggerRow tr : rowReader.readAllTriggers().values()) {
+      long t13 = System.currentTimeMillis();
+      Map<String, TriggerRow> allTriggers = rowReader.readAllTriggers();
+      long t14 = System.currentTimeMillis();
+      
+      log.info("readAllTriggers выполнено за " + (t14 - t13) + " мс");
+      
+      for (TriggerRow tr : allTriggers.values()) {
         Trigger t = new Trigger(tr.name, tr.tableName);
         t.eventManipulation = tr.eventManipulation;
         t.actionOrientation = tr.actionOrientation;
@@ -106,7 +150,13 @@ public class StruReader {
     }
     
     {
-      for (Entry<String, String> e : rowReader.readTableComments().entrySet()) {
+      long t15 = System.currentTimeMillis();
+      Map<String, String> tableComments = rowReader.readTableComments();
+      long t16 = System.currentTimeMillis();
+      
+      log.info("readTableComments выполнено за " + (t16 - t15) + " мс");
+      
+      for (Entry<String, String> e : tableComments.entrySet()) {
         Table table = ret.table(e.getKey());
         if (table != null) {
           table.comment = e.getValue();
@@ -114,7 +164,13 @@ public class StruReader {
       }
     }
     {
-      for (Entry<String, String> e : rowReader.readColumnComments().entrySet()) {
+      long t17 = System.currentTimeMillis();
+      Map<String, String> columnComments = rowReader.readColumnComments();
+      long t18 = System.currentTimeMillis();
+      
+      log.info("readColumnComments выполнено за " + (t18 - t17) + " мс");
+      
+      for (Entry<String, String> e : columnComments.entrySet()) {
         String[] split = e.getKey().split("\\.");
         Table table = ret.table(split[0]);
         if (table != null) {
@@ -125,6 +181,9 @@ public class StruReader {
         }
       }
     }
+    
+    long t19 = System.currentTimeMillis();
+    log.info("Чтение всей структуры выполнено за " + (t19 - t1) + " мс");
     
     return ret;
   }
