@@ -1,5 +1,6 @@
 package kz.greetgo.libase.changes;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -142,7 +143,7 @@ public class Comparer {
     changeList.add(new AlterField(fieldFrom, alters));
   }
   
-  private static class CMP implements Comparator<Change> {
+  private static class CMP implements Comparator<Change>, Serializable {
     @Override
     public int compare(Change o1, Change o2) {
       

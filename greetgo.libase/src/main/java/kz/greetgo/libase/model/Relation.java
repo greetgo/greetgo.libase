@@ -10,7 +10,7 @@ public abstract class Relation {
     final int prime = 31;
     int result = 1;
     result = prime * result + getClass().hashCode();
-    result = prime * result + ((name == null) ? 0 : name.hashCode());
+    result = prime * result + ((name == null) ? 0 :name.hashCode());
     return result;
   }
   
@@ -19,9 +19,9 @@ public abstract class Relation {
     if (this == obj) return true;
     if (obj == null) return false;
     
-    Relation other = (Relation)obj;
+    if (!getClass().equals(obj.getClass())) return false;
     
-    if (!getClass().equals(other.getClass())) return false;
+    Relation other = (Relation)obj;
     
     if (name == null) {
       if (other.name != null) return false;

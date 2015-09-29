@@ -12,11 +12,14 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class OracleRowReaderTest {
   
   private Connection connection;
   
   @BeforeClass
+  @SuppressFBWarnings("DMI_CONSTANT_DB_PASSWORD")
   private void beforeClass() throws Exception {
     Class.forName("oracle.jdbc.OracleDriver");
     

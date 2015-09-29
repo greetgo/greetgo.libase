@@ -60,7 +60,7 @@ compileTestJava {
 repositories {
     maven {
       name 'Our repository'
-      url 'http://192.168.11.11:8080/repository/internal/'
+      url System.getenv('GG_REPO')
     }
 }
 
@@ -68,6 +68,8 @@ dependencies {
   compile 'postgresql:postgresql:9.1-901.jdbc4'
   compile "greetgo.3rd-party:oracle-ojdbc6_g:11.2.0.3"
   //compile 'org.mybatis:mybatis:3.2.3'
+  
+  compile 'com.google.code.findbugs:annotations:2.0.1'
 
   testCompile 'org.testng:testng:6.1.1'
   testCompile 'org.easytesting:fest-assert-core:2.0M10'
@@ -95,7 +97,7 @@ uploadArchives {
   repositories.mavenDeployer {
     configuration = configurations.archives
     repository(
-      url: 'http://192.168.11.11:8080/repository/internal/'
+      url: System.getenv('GG_REPO')
     )
 
     pom.project {
