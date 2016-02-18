@@ -109,7 +109,7 @@ public class StruReader {
         
         for (String depName : vr.dependenses) {
           Relation dep = ret.relations.get(depName);
-          if (dep == null) throw new NullPointerException("No relation " + depName);
+          if (dep == null) continue;
           view.dependences.add(dep);
         }
       }
