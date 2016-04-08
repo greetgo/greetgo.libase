@@ -5,6 +5,11 @@ import java.sql.DriverManager;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import kz.greetgo.libase.changes.Change;
 import kz.greetgo.libase.changes.Comparer;
 import kz.greetgo.libase.changes.CreateRelation;
@@ -14,12 +19,6 @@ import kz.greetgo.libase.model.Relation;
 import kz.greetgo.libase.model.Table;
 import kz.greetgo.libase.model.View;
 
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 public class DiffOracleTest {
   private Connection connTo, connFrom;
   
@@ -28,10 +27,10 @@ public class DiffOracleTest {
   private void beforeClass() throws Exception {
     Class.forName("org.postgresql.Driver");
     
-    connFrom = DriverManager.getConnection("jdbc:oracle:thin:@192.168.0.101:1521:orcl",
-        "POMPEI_COLLECT_DIFF", "pompei_collect");
-    connTo = DriverManager.getConnection("jdbc:oracle:thin:@192.168.0.101:1521:orcl",
-        "POMPEI_COLLECT", "pompei_collect");
+    connFrom = DriverManager.getConnection("jdbc:oracle:thin:@192.168.11.103:1521:orcl",
+        "POMPEI_KASPIPTP_DIFF", "pompei_kaspiptp");
+    connTo = DriverManager.getConnection("jdbc:oracle:thin:@192.168.11.103:1521:orcl",
+        "POMPEI_KASPIPTP", "pompei_kaspiptp");
   }
   
   @AfterClass
@@ -44,8 +43,12 @@ public class DiffOracleTest {
   
   @Test
   public void diff() throws Exception {
+    System.out.println("Чтение TO...");
     DbStru to = StruReader.read(new RowReaderOracle(connTo));
+    System.out.println("OK");
+    System.out.println("Чтение FROM...");
     DbStru from = StruReader.read(new RowReaderOracle(connFrom));
+    System.out.println("OK");
     
     List<Change> changes = Comparer.compare(to, from);
     
