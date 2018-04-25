@@ -1,10 +1,5 @@
 package kz.greetgo.libase.changesql;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-
 import kz.greetgo.libase.changes.AddTableField;
 import kz.greetgo.libase.changes.AlterField;
 import kz.greetgo.libase.changes.AlterPartPart;
@@ -28,75 +23,80 @@ import kz.greetgo.libase.model.Table;
 import kz.greetgo.libase.model.Trigger;
 import kz.greetgo.libase.model.View;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+
 public class SqlGeneratorPostgres implements SqlGenerator {
-  
+
   @Override
   public void generate(List<String> sqlResult, List<Change> changes) {
     for (Change change : changes) {
-      
+
       if (change instanceof DropCreateTrigger) {
-        generateDropCreateTrigger(sqlResult, ((DropCreateTrigger)change).trigger);
+        generateDropCreateTrigger(sqlResult, ((DropCreateTrigger) change).trigger);
         continue;
       }
-      
+
       sqlResult.add(generateChange(change));
     }
   }
-  
+
   private String generateChange(Change change) {
     if (change instanceof CreateRelation) {
-      return generateCreateRelation(((CreateRelation)change).relation);
+      return generateCreateRelation(((CreateRelation) change).relation);
     }
-    
+
     if (change instanceof AddTableField) {
-      return generateAddTableField(((AddTableField)change).field);
+      return generateAddTableField(((AddTableField) change).field);
     }
     if (change instanceof AlterField) {
-      return generateAlterField((AlterField)change);
+      return generateAlterField((AlterField) change);
     }
     if (change instanceof CreateOrReplaceView) {
-      return generateCreateOrReplaceView(((CreateOrReplaceView)change).view);
+      return generateCreateOrReplaceView(((CreateOrReplaceView) change).view);
     }
     if (change instanceof CreateForeignKey) {
-      return generateCreateForeignKey(((CreateForeignKey)change).foreignKey);
+      return generateCreateForeignKey(((CreateForeignKey) change).foreignKey);
     }
     if (change instanceof CreateSequence) {
-      return generateCreateSequence(((CreateSequence)change).sequence);
+      return generateCreateSequence(((CreateSequence) change).sequence);
     }
     if (change instanceof CreateOrReplaceFunc) {
-      return generateCreateOrReplaceFunc(((CreateOrReplaceFunc)change).storeFunc);
+      return generateCreateOrReplaceFunc(((CreateOrReplaceFunc) change).storeFunc);
     }
     if (change instanceof CreateTrigger) {
-      return generateCreateTrigger(((CreateTrigger)change).trigger);
+      return generateCreateTrigger(((CreateTrigger) change).trigger);
     }
     if (change instanceof TableComment) {
-      return GeneratorAddon.generateTableComment(((TableComment)change).table);
+      return GeneratorAddon.generateTableComment(((TableComment) change).table);
     }
     if (change instanceof FieldComment) {
-      FieldComment x = (FieldComment)change;
+      FieldComment x = (FieldComment) change;
       return GeneratorAddon.generateFieldComment(x.table, x.field);
     }
-    
+
     throw new IllegalArgumentException("Unknown change " + change);
   }
-  
+
   private String generateCreateRelation(Relation relation) {
     if (relation instanceof Table) {
-      return generateCreateTable((Table)relation);
+      return generateCreateTable((Table) relation);
     }
-    
+
     if (relation instanceof View) {
-      return generateCreateView((View)relation);
+      return generateCreateView((View) relation);
     }
-    
+
     throw new IllegalArgumentException("Unknown relation " + relation);
   }
-  
+
   private String generateCreateTable(Table table) {
     StringBuilder sb = new StringBuilder();
     sb.append("create table ").append(table.name).append("(");
     for (Field field : table.allFields) {
-      sb.append(field.name).append(' ').append(field.type);
+      sb.append(field.name).append(' ').append(correctType(field.type));
       if (!field.nullable) sb.append(" not null");
       if (field.defaultValue != null) sb.append(" default ").append(field.defaultValue);
       sb.append(", ");
@@ -114,11 +114,19 @@ public class SqlGeneratorPostgres implements SqlGenerator {
     sb.append(')');
     return sb.toString();
   }
-  
+
+  private String correctType(String type) {
+    if (type == null) return "";
+    if (type.toLowerCase().startsWith("smallint")) {
+      return "smallint";
+    }
+    return type;
+  }
+
   private String generateCreateView(View view) {
     return "create view " + view.name + " as " + view.content;
   }
-  
+
   private String generateAddTableField(Field field) {
     StringBuilder sb = new StringBuilder();
     sb.append("alter table " + field.owner.name + " add column " + field.name + ' ' + field.type);
@@ -126,54 +134,55 @@ public class SqlGeneratorPostgres implements SqlGenerator {
     if (field.defaultValue != null) sb.append(" default ").append(field.defaultValue);
     return sb.toString();
   }
-  
+
   private String generateAlterField(AlterField alter) {
     StringBuilder sb = new StringBuilder();
     sb.append("alter table ").append(alter.field.owner.name);
     sb.append(" alter column ").append(alter.field.name);
-    
-    FOR: for (AlterPartPart alterPart : sort(alter.alters)) {
+
+    FOR:
+    for (AlterPartPart alterPart : sort(alter.alters)) {
       switch (alterPart) {
-      case DEFAULT:
-        if (alter.field.defaultValue == null) {
-          sb.append(" drop default,");
-        } else {
-          sb.append(" set default " + alter.field.defaultValue + ',');
-        }
-        continue FOR;
-        
-      case NOT_NULL:
-        if (alter.field.nullable) {
-          sb.append(" drop not null,");
-        } else {
-          sb.append(" set not null,");
-        }
-        continue FOR;
-        
-      case TYPE:
-        sb.append(" type " + alter.field.type + ",");
-        continue FOR;
-        
-      default:
-        throw new IllegalArgumentException("Unknown " + alterPart);
+        case DEFAULT:
+          if (alter.field.defaultValue == null) {
+            sb.append(" drop default,");
+          } else {
+            sb.append(" set default " + alter.field.defaultValue + ',');
+          }
+          continue FOR;
+
+        case NOT_NULL:
+          if (alter.field.nullable) {
+            sb.append(" drop not null,");
+          } else {
+            sb.append(" set not null,");
+          }
+          continue FOR;
+
+        case TYPE:
+          sb.append(" type " + alter.field.type + ",");
+          continue FOR;
+
+        default:
+          throw new IllegalArgumentException("Unknown " + alterPart);
       }
     }//FOR
-    
+
     sb.setLength(sb.length() - 1);
     return sb.toString();
   }
-  
+
   private static List<AlterPartPart> sort(Set<AlterPartPart> alters) {
     List<AlterPartPart> ret = new ArrayList<>();
     ret.addAll(alters);
     Collections.sort(ret);
     return ret;
   }
-  
+
   private String generateCreateOrReplaceView(View view) {
     return "create or replace view " + view.name + " as " + view.content;
   }
-  
+
   private String generateCreateForeignKey(ForeignKey fk) {
     StringBuilder sb = new StringBuilder("alter table " + fk.from.name);
     sb.append(" add foreign key (");
@@ -189,7 +198,7 @@ public class SqlGeneratorPostgres implements SqlGenerator {
     sb.append(')');
     return sb.toString();
   }
-  
+
   private String generateCreateSequence(Sequence sequence) {
     StringBuilder sb = new StringBuilder("create sequence " + sequence.name);
     if (sequence.startFrom > 1) {
@@ -197,7 +206,7 @@ public class SqlGeneratorPostgres implements SqlGenerator {
     }
     return sb.toString();
   }
-  
+
   private String generateCreateOrReplaceFunc(StoreFunc func) {
     StringBuilder sb = new StringBuilder();
     sb.append("create or replace function ").append(func.name).append('(');
@@ -210,18 +219,18 @@ public class SqlGeneratorPostgres implements SqlGenerator {
     sb.append(" as $LIBASE$").append(func.source).append("$LIBASE$ language " + func.language);
     return sb.toString();
   }
-  
+
   private void generateDropCreateTrigger(List<String> sqlResult, Trigger trigger) {
     sqlResult.add(generateDropTrigger(trigger));
     sqlResult.add(generateCreateTrigger(trigger));
   }
-  
+
   private String generateCreateTrigger(Trigger trigger) {
     return "create trigger " + trigger.name + " " + trigger.actionTiming + " "
-        + trigger.eventManipulation + " on " + trigger.tableName + " for each "
-        + trigger.actionOrientation + " " + trigger.actionStatement;
+      + trigger.eventManipulation + " on " + trigger.tableName + " for each "
+      + trigger.actionOrientation + " " + trigger.actionStatement;
   }
-  
+
   private String generateDropTrigger(Trigger trigger) {
     return "drop trigger " + trigger.name + " on " + trigger.tableName;
   }

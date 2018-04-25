@@ -10,3 +10,7 @@
 /tomcat
 /war
 /*.log
+*.iml
+*.ipr
+*.iws
+/.idea/

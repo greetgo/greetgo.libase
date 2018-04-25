@@ -1,11 +1,12 @@
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'maven'
+apply plugin: 'idea'
 
 group = 'kz.greetgo'
 
 sourceCompatibility = 1.7
-version = '1.0.5'
+version = '1.0.6'
 
 def nowDate = new Date()
 def nowFormattedDate = nowDate.format("yyyy-MM-dd/HH:mm:ss")
