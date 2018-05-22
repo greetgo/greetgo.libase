@@ -129,7 +129,7 @@ public class SqlGeneratorPostgres implements SqlGenerator {
 
   private String generateAddTableField(Field field) {
     StringBuilder sb = new StringBuilder();
-    sb.append("alter table " + field.owner.name + " add column " + field.name + ' ' + field.type);
+    sb.append("alter table " + field.owner.name + " add column " + field.name + ' ' + correctType(field.type));
     if (!field.nullable) sb.append(" not null");
     if (field.defaultValue != null) sb.append(" default ").append(field.defaultValue);
     return sb.toString();
@@ -160,7 +160,7 @@ public class SqlGeneratorPostgres implements SqlGenerator {
           continue FOR;
 
         case TYPE:
-          sb.append(" type " + alter.field.type + ",");
+          sb.append(" type " + correctType(alter.field.type) + ",");
           continue FOR;
 
         default:
