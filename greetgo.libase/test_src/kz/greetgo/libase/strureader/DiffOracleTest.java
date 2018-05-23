@@ -1,15 +1,5 @@
 package kz.greetgo.libase.strureader;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import kz.greetgo.libase.changes.Change;
 import kz.greetgo.libase.changes.Comparer;
 import kz.greetgo.libase.changes.CreateRelation;
@@ -18,21 +8,28 @@ import kz.greetgo.libase.model.DbStru;
 import kz.greetgo.libase.model.Relation;
 import kz.greetgo.libase.model.Table;
 import kz.greetgo.libase.model.View;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DiffOracleTest {
   private Connection connTo, connFrom;
-  
+
   @BeforeClass
-  @SuppressFBWarnings("DMI_CONSTANT_DB_PASSWORD")
-  private void beforeClass() throws Exception {
+  private void openConnectionToDb() throws Exception {
     Class.forName("org.postgresql.Driver");
-    
+
     connFrom = DriverManager.getConnection("jdbc:oracle:thin:@192.168.11.103:1521:orcl",
-        "POMPEI_KASPIPTP_DIFF", "pompei_kaspiptp");
+      "POMPEI_KASPIPTP_DIFF", "pompei_kaspiptp");
     connTo = DriverManager.getConnection("jdbc:oracle:thin:@192.168.11.103:1521:orcl",
-        "POMPEI_KASPIPTP", "pompei_kaspiptp");
+      "POMPEI_KASPIPTP", "pompei_kaspiptp");
   }
-  
+
   @AfterClass
   private void afterClass() throws Exception {
     connTo.close();
@@ -40,7 +37,7 @@ public class DiffOracleTest {
     connFrom.close();
     connFrom = null;
   }
-  
+
   @Test
   public void diff() throws Exception {
     System.out.println("Чтение TO...");
@@ -49,14 +46,14 @@ public class DiffOracleTest {
     System.out.println("Чтение FROM...");
     DbStru from = StruReader.read(new RowReaderOracle(connFrom));
     System.out.println("OK");
-    
+
     List<Change> changes = Comparer.compare(to, from);
-    
+
     Comparer.sort(changes);
-    
+
     for (Change change : changes) {
       if (change instanceof CreateRelation) {
-        Relation rel = ((CreateRelation)change).relation;
+        Relation rel = ((CreateRelation) change).relation;
         if (rel instanceof View) {
           System.out.println("---> VIEW " + rel.name);
         }
@@ -65,13 +62,13 @@ public class DiffOracleTest {
         }
       }
     }
-    
+
     if ("a".equals("a")) return;
-    
+
     SqlGeneratorOracle g = new SqlGeneratorOracle();
     List<String> sqlResult = new ArrayList<>();
     g.generate(sqlResult, changes);
-    
+
     System.out.println("-----------------------------------------");
     for (String sql : sqlResult) {
       System.out.println(sql + ";;");

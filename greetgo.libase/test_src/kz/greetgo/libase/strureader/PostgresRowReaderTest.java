@@ -12,15 +12,12 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 public class PostgresRowReaderTest {
   
   private Connection connection;
   
   @BeforeClass
-  @SuppressFBWarnings("DMI_EMPTY_DB_PASSWORD")
-  private void beforeClass() throws Exception {
+  private void openConnectionToDb() throws Exception {
     Class.forName("org.postgresql.Driver");
     
     connection = DriverManager.getConnection("jdbc:postgresql:scoring_diff", "scoring_diff", "");

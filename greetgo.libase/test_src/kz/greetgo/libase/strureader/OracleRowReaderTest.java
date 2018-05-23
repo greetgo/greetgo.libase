@@ -1,6 +1,8 @@
 package kz.greetgo.libase.strureader;
 
-import static org.fest.assertions.api.Assertions.assertThat;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -8,52 +10,47 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import static org.fest.assertions.api.Assertions.assertThat;
 
 public class OracleRowReaderTest {
-  
+
   private Connection connection;
-  
+
   @BeforeClass
-  @SuppressFBWarnings("DMI_CONSTANT_DB_PASSWORD")
-  private void beforeClass() throws Exception {
+  private void openConnectionToDb() throws Exception {
     Class.forName("oracle.jdbc.OracleDriver");
-    
+
     connection = DriverManager.getConnection(//
-        "jdbc:oracle:thin:@192.168.0.101:1521:orcl", //
-        "aaa1", "aaa1");
+      "jdbc:oracle:thin:@192.168.0.101:1521:orcl", //
+      "aaa1", "aaa1");
   }
-  
+
   @AfterClass
   private void afterClass() throws Exception {
     connection.close();
     connection = null;
   }
-  
+
   @Test
   public void readAllTableColumns() throws Exception {
     RowReaderOracle reader = new RowReaderOracle(connection);
     List<ColumnRow> list = reader.readAllTableColumns();
-    
+
     for (ColumnRow columnRow : list) {
       System.out.println(columnRow);
     }
   }
-  
+
   @Test
   public void readAllTablePrimaryKey() throws Exception {
     RowReaderOracle reader = new RowReaderOracle(connection);
     Map<String, PrimaryKeyRow> map = reader.readAllTablePrimaryKeys();
-    
+
     for (PrimaryKeyRow primaryKey : map.values()) {
       System.out.println(primaryKey);
     }
   }
-  
+
   @Test
   public void readAllForeignKeys() throws Exception {
     RowReaderOracle reader = new RowReaderOracle(connection);
@@ -61,16 +58,16 @@ public class OracleRowReaderTest {
       System.out.println(r);
     }
   }
-  
+
   @Test
   public void readAllSequences() throws Exception {
     RowReaderOracle reader = new RowReaderOracle(connection);
     for (SequenceRow x : reader.readAllSequences().values()) {
       System.out.println(x);
     }
-    
+
   }
-  
+
   @Test
   public void readAllViews() throws Exception {
     RowReaderOracle reader = new RowReaderOracle(connection);
@@ -78,7 +75,7 @@ public class OracleRowReaderTest {
       System.out.println(vr);
     }
   }
-  
+
   @Test
   public void readAllFuncs() throws Exception {
     RowReaderOracle reader = new RowReaderOracle(connection);
@@ -86,7 +83,7 @@ public class OracleRowReaderTest {
       System.out.println(f);
     }
   }
-  
+
   @Test
   public void readAllTriggers() throws Exception {
     RowReaderOracle reader = new RowReaderOracle(connection);
@@ -94,7 +91,7 @@ public class OracleRowReaderTest {
       System.out.println(x);
     }
   }
-  
+
   @Test
   public void readTableComments() throws Exception {
     RowReaderOracle reader = new RowReaderOracle(connection);
@@ -103,7 +100,7 @@ public class OracleRowReaderTest {
       System.out.println(e);
     }
   }
-  
+
   @Test
   public void readColumnComments() throws Exception {
     RowReaderOracle reader = new RowReaderOracle(connection);
