@@ -17,7 +17,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 
-public class StruReaderTest {
+public class StruReaderTestOld {
   
   private Connection connection;
   

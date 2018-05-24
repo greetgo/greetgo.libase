@@ -19,13 +19,13 @@ import kz.greetgo.libase.model.Field;
 
 import org.testng.annotations.Test;
 
-public class SqlGeneratorPostgresTest {
+public class SqlGeneratorOracleTestOld {
   @Test
   public void generate_createTable() throws Exception {
     DbStru stru = new DbStru();
     Creator.addTable(stru, "asd *id int notnull, name varchar(100) def'asd'");
     
-    SqlGeneratorPostgres g = new SqlGeneratorPostgres();
+    SqlGeneratorOracle g = new SqlGeneratorOracle();
     List<Change> changes = new ArrayList<>();
     changes.add(new CreateRelation(stru.relations.get("asd")));
     List<String> sqlResult = new ArrayList<>();
@@ -44,7 +44,7 @@ public class SqlGeneratorPostgresTest {
     Creator.addTable(stru, "t2 id int");
     Creator.addView(stru, "asd t1 t2|select 'hello world' hello_world");
     
-    SqlGeneratorPostgres g = new SqlGeneratorPostgres();
+    SqlGeneratorOracle g = new SqlGeneratorOracle();
     List<Change> changes = new ArrayList<>();
     changes.add(new CreateRelation(stru.relations.get("asd")));
     List<String> sqlResult = new ArrayList<>();
@@ -62,12 +62,12 @@ public class SqlGeneratorPostgresTest {
     List<Change> changes = new ArrayList<>();
     changes.add(new AddTableField(field));
     List<String> sqlResult = new ArrayList<>();
-    SqlGeneratorPostgres g = new SqlGeneratorPostgres();
+    SqlGeneratorOracle g = new SqlGeneratorOracle();
     g.generate(sqlResult, changes);
     
     assertThat(sqlResult).hasSize(1);
     assertThat(sqlResult.get(0)).isEqualTo(
-        "alter table asd add column name varchar(100) not null default 'asd'");
+        "alter table asd add (name varchar(100) default 'asd' not null)");
   }
   
   @Test
@@ -79,14 +79,15 @@ public class SqlGeneratorPostgresTest {
     changes.add(new AlterField(field,//
         AlterPartPart.DEFAULT, AlterPartPart.NOT_NULL, AlterPartPart.TYPE));
     List<String> sqlResult = new ArrayList<>();
-    SqlGeneratorPostgres g = new SqlGeneratorPostgres();
+    SqlGeneratorOracle g = new SqlGeneratorOracle();
     g.generate(sqlResult, changes);
     
     System.out.println(sqlResult);
     
-    assertThat(sqlResult).hasSize(1);
-    assertThat(sqlResult.get(0)).isEqualTo(
-        "alter table asd alter column name set default 'asd', set not null, type varchar(100)");
+    assertThat(sqlResult).hasSize(3);
+    assertThat(sqlResult.get(0)).isEqualTo("alter table asd modify (name default 'asd')");
+    assertThat(sqlResult.get(1)).isEqualTo("alter table asd modify (name not null)");
+    assertThat(sqlResult.get(2)).isEqualTo("alter table asd modify (name varchar(100))");
   }
   
   @Test
@@ -95,17 +96,16 @@ public class SqlGeneratorPostgresTest {
     Creator.addTable(stru, "asd *id int notnull, name varchar(100)");
     Field field = stru.table("asd").field("name");
     List<Change> changes = new ArrayList<>();
-    changes.add(new AlterField(field,//
-        AlterPartPart.DEFAULT, AlterPartPart.NOT_NULL));
+    changes.add(new AlterField(field, AlterPartPart.DEFAULT, AlterPartPart.NOT_NULL));
     List<String> sqlResult = new ArrayList<>();
-    SqlGeneratorPostgres g = new SqlGeneratorPostgres();
+    SqlGeneratorOracle g = new SqlGeneratorOracle();
     g.generate(sqlResult, changes);
     
     System.out.println(sqlResult);
     
-    assertThat(sqlResult).hasSize(1);
-    assertThat(sqlResult.get(0)).isEqualTo(
-        "alter table asd alter column name drop default, drop not null");
+    assertThat(sqlResult).hasSize(2);
+    assertThat(sqlResult.get(0)).isEqualTo("alter table asd modify (name default null)");
+    assertThat(sqlResult.get(1)).isEqualTo("alter table asd modify (name null)");
   }
   
   @Test
@@ -113,7 +113,7 @@ public class SqlGeneratorPostgresTest {
     DbStru stru = new DbStru();
     Creator.addView(stru, "asd|select 'hello world' hello_world");
     
-    SqlGeneratorPostgres g = new SqlGeneratorPostgres();
+    SqlGeneratorOracle g = new SqlGeneratorOracle();
     List<Change> changes = new ArrayList<>();
     changes.add(new CreateOrReplaceView(stru.view("asd")));
     List<String> sqlResult = new ArrayList<>();

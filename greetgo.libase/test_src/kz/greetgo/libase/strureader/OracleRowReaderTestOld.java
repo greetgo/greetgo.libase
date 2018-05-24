@@ -12,7 +12,7 @@ import java.util.Map.Entry;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 
-public class OracleRowReaderTest {
+public class OracleRowReaderTestOld {
 
   private Connection connection;
 

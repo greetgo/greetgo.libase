@@ -17,7 +17,7 @@ import java.sql.DriverManager;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DiffOracleTest {
+public class DiffOracleTestOld {
   private Connection connTo, connFrom;
 
   @BeforeClass

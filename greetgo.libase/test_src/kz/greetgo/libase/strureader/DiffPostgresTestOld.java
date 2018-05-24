@@ -13,7 +13,7 @@ import java.sql.DriverManager;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DiffPostgresTest {
+public class DiffPostgresTestOld {
   private Connection connTo, connFrom;
 
   @BeforeClass
