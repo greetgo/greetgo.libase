@@ -1,7 +1,5 @@
 package kz.greetgo.libase.strureader;
 
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.sql.Connection;
@@ -16,7 +14,7 @@ public class OracleRowReaderTestOld {
 
   private Connection connection;
 
-  @BeforeClass
+  //  @BeforeClass
   private void openConnectionToDb() throws Exception {
     Class.forName("oracle.jdbc.OracleDriver");
 
@@ -25,13 +23,13 @@ public class OracleRowReaderTestOld {
       "aaa1", "aaa1");
   }
 
-  @AfterClass
+  //  @AfterClass
   private void afterClass() throws Exception {
     connection.close();
     connection = null;
   }
 
-  @Test
+  @Test(enabled = false)
   public void readAllTableColumns() throws Exception {
     RowReaderOracle reader = new RowReaderOracle(connection);
     List<ColumnRow> list = reader.readAllTableColumns();
@@ -41,7 +39,7 @@ public class OracleRowReaderTestOld {
     }
   }
 
-  @Test
+  @Test(enabled = false)
   public void readAllTablePrimaryKey() throws Exception {
     RowReaderOracle reader = new RowReaderOracle(connection);
     Map<String, PrimaryKeyRow> map = reader.readAllTablePrimaryKeys();
@@ -51,7 +49,7 @@ public class OracleRowReaderTestOld {
     }
   }
 
-  @Test
+  @Test(enabled = false)
   public void readAllForeignKeys() throws Exception {
     RowReaderOracle reader = new RowReaderOracle(connection);
     for (ForeignKeyRow r : reader.readAllForeignKeys().values()) {
@@ -59,7 +57,7 @@ public class OracleRowReaderTestOld {
     }
   }
 
-  @Test
+  @Test(enabled = false)
   public void readAllSequences() throws Exception {
     RowReaderOracle reader = new RowReaderOracle(connection);
     for (SequenceRow x : reader.readAllSequences().values()) {
@@ -68,7 +66,7 @@ public class OracleRowReaderTestOld {
 
   }
 
-  @Test
+  @Test(enabled = false)
   public void readAllViews() throws Exception {
     RowReaderOracle reader = new RowReaderOracle(connection);
     for (ViewRow vr : reader.readAllViews().values()) {
@@ -76,7 +74,7 @@ public class OracleRowReaderTestOld {
     }
   }
 
-  @Test
+  @Test(enabled = false)
   public void readAllFuncs() throws Exception {
     RowReaderOracle reader = new RowReaderOracle(connection);
     for (StoreFuncRow f : reader.readAllFuncs()) {
@@ -84,7 +82,7 @@ public class OracleRowReaderTestOld {
     }
   }
 
-  @Test
+  @Test(enabled = false)
   public void readAllTriggers() throws Exception {
     RowReaderOracle reader = new RowReaderOracle(connection);
     for (TriggerRow x : reader.readAllTriggers().values()) {
@@ -92,7 +90,7 @@ public class OracleRowReaderTestOld {
     }
   }
 
-  @Test
+  @Test(enabled = false)
   public void readTableComments() throws Exception {
     RowReaderOracle reader = new RowReaderOracle(connection);
     Map<String, String> map = reader.readTableComments();
@@ -101,7 +99,7 @@ public class OracleRowReaderTestOld {
     }
   }
 
-  @Test
+  @Test(enabled = false)
   public void readColumnComments() throws Exception {
     RowReaderOracle reader = new RowReaderOracle(connection);
     Map<String, String> map = reader.readColumnComments();

@@ -9,7 +9,7 @@ import java.sql.SQLException;
 
 import static kz.greetgo.libase.utils.TestUtil.exec;
 
-public class DbWorkerPostgres implements DbWorker {
+public class DbWorkerPostgres extends AbstractDbWorker {
 
   private static Connection getAdminConnection() throws SQLException {
     return DriverManager.getConnection(SysParams.pgAdminUrl(), SysParams.pgAdminUserid(), SysParams.pgAdminPassword());
@@ -29,28 +29,7 @@ public class DbWorkerPostgres implements DbWorker {
 
     String url = changeDb(SysParams.pgAdminUrl(), db);
 
-    return new ConnectParams() {
-
-      @Override
-      public String db() {
-        return db;
-      }
-
-      @Override
-      public String url() {
-        return url;
-      }
-
-      @Override
-      public String username() {
-        return username;
-      }
-
-      @Override
-      public String password() {
-        return password;
-      }
-    };
+    return new StoredConnectParams(db, url, username, password);
   }
 
   @Override
@@ -86,4 +65,5 @@ public class DbWorkerPostgres implements DbWorker {
     }
 
   }
+
 }

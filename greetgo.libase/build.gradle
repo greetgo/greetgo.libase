@@ -30,9 +30,11 @@ def nowFormattedDate = nowDate.format("yyyy-MM-dd/HH:mm:ss")
 
 jar {
   manifest {
-    attributes 'Implementation-Title': project.name,
-      'Implementation-Version': version, 'Implementation-Vendor': 'greetgo!',
-      'Built-By': System.getProperty("user.name"), 'Built-At': nowFormattedDate
+    attributes 'Implementation-Title': project.name
+    attributes 'Implementation-Version': version
+    attributes 'Implementation-Vendor': 'greetgo!'
+    attributes 'Built-By': System.getProperty("user.name")
+    attributes 'Built-At': nowFormattedDate
   }
 }
 
@@ -45,12 +47,12 @@ repositories {
 dependencies {
   compile 'postgresql:postgresql:9.1-901.jdbc4'
   compile "greetgo.3rd-party:oracle-ojdbc6_g:11.2.0.3"
-  //compile 'org.mybatis:mybatis:3.2.3'
 
   testCompile 'org.testng:testng:6.5.1'
   testCompile 'org.easytesting:fest-assert-core:2.0M10'
   testCompile group: 'kz.greetgo.conf', name: 'greetgo.sys_params', version: '1.0.2'
-
+  testCompile fileTree(dir: 'test_libs', include: '*.jar')
 }
 
 test.useTestNG()
+//test.options.suites("test_resources/one_test.xml")

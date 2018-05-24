@@ -4,8 +4,6 @@ import kz.greetgo.libase.changes.Change;
 import kz.greetgo.libase.changes.Comparer;
 import kz.greetgo.libase.changesql.SqlGeneratorPostgres;
 import kz.greetgo.libase.model.DbStru;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.sql.Connection;
@@ -16,7 +14,7 @@ import java.util.List;
 public class DiffPostgresTestOld {
   private Connection connTo, connFrom;
 
-  @BeforeClass
+  //  @BeforeClass
   private void openConnectionToDb() throws Exception {
     Class.forName("org.postgresql.Driver");
 
@@ -24,7 +22,7 @@ public class DiffPostgresTestOld {
     connTo = DriverManager.getConnection("jdbc:postgresql:scoring", "scoring", "");
   }
 
-  @AfterClass
+  //  @AfterClass
   private void afterClass() throws Exception {
     connTo.close();
     connTo = null;
@@ -32,7 +30,7 @@ public class DiffPostgresTestOld {
     connFrom = null;
   }
 
-  @Test
+  @Test(enabled = false)
   public void diff() throws Exception {
     DbStru to = StruReader.read(new RowReaderPostgres(connTo));
     DbStru from = StruReader.read(new RowReaderPostgres(connFrom));

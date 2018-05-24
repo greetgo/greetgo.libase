@@ -8,8 +8,6 @@ import kz.greetgo.libase.model.DbStru;
 import kz.greetgo.libase.model.Relation;
 import kz.greetgo.libase.model.Table;
 import kz.greetgo.libase.model.View;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.sql.Connection;
@@ -20,7 +18,7 @@ import java.util.List;
 public class DiffOracleTestOld {
   private Connection connTo, connFrom;
 
-  @BeforeClass
+  //  @BeforeClass
   private void openConnectionToDb() throws Exception {
     Class.forName("org.postgresql.Driver");
 
@@ -30,7 +28,7 @@ public class DiffOracleTestOld {
       "POMPEI_KASPIPTP", "pompei_kaspiptp");
   }
 
-  @AfterClass
+  //  @AfterClass
   private void afterClass() throws Exception {
     connTo.close();
     connTo = null;
@@ -38,7 +36,7 @@ public class DiffOracleTestOld {
     connFrom = null;
   }
 
-  @Test
+  @Test(enabled = false)
   public void diff() throws Exception {
     System.out.println("Чтение TO...");
     DbStru to = StruReader.read(new RowReaderOracle(connTo));
