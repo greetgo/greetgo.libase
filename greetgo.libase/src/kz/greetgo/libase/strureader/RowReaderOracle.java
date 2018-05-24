@@ -336,4 +336,9 @@ public class RowReaderOracle implements RowReader {
 
     }
   }
+
+  @Override
+  public RowReader addSchema(String schemaName) {
+    throw new UnsupportedOperationException("Schemas for Oracle not supported");
+  }
 }

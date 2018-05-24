@@ -7,7 +7,7 @@ import java.util.Set;
 
 import org.testng.annotations.Test;
 
-public class CreatorTestOld {
+public class CreatorTest {
   @Test
   public void createTable() throws Exception {
     DbStru stru = new DbStru();

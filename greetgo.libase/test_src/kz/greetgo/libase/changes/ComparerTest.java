@@ -11,7 +11,7 @@ import kz.greetgo.libase.model.Table;
 
 import org.testng.annotations.Test;
 
-public class ComparerTestOld {
+public class ComparerTest {
   @Test
   public void compare_CreateRelation() throws Exception {
     DbStru from = new DbStru();

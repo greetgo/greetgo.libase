@@ -11,6 +11,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static kz.greetgo.libase.util.StrUtil.def;
 
@@ -25,56 +27,73 @@ public class RowReaderPostgres implements RowReader {
   @Override
   public List<ColumnRow> readAllTableColumns() throws Exception {
 
-    String sql = "select * from information_schema.columns "
-      + " where table_schema = 'public' and table_name not in "
-      + " (select table_name from information_schema.views where table_schema = 'public')"
-      + " order by table_name, ordinal_position";
+    String sql = "select * from (select"
+      + " case when table_schema = 'public' then table_name else table_schema||'.'||table_name end full_table_name,"
+      + " column_name, column_default, is_nullable,"
+      + " character_maximum_length, numeric_precision, numeric_scale, data_type, ordinal_position"
+      + " from information_schema.columns "
+      + " where table_schema in (" + schemas() + ") and table_name not in "
+      + " (select table_name from information_schema.views where table_schema in (" + schemas() + "))) x"
+      + " order by full_table_name, ordinal_position";
 
+    //noinspection Duplicates
     try (PreparedStatement ps = connection.prepareStatement(sql)) {
-      //noinspection Duplicates
       try (ResultSet rs = ps.executeQuery()) {
         List<ColumnRow> ret = new ArrayList<>();
-        while (rs.next()) {
-          ret.add(readColumnRow(rs));
-        }
+        while (rs.next()) ret.add(readColumnRow(rs));
         return ret;
       }
     }
   }
 
-  private static final Set<String> NOSIZE_COLS = new HashSet<>();
-
-  static {
-    NOSIZE_COLS.add("BIGINT");
-    NOSIZE_COLS.add("INTEGER");
-    NOSIZE_COLS.add("DOUBLE PRECISION");
-  }
-
   private ColumnRow readColumnRow(ResultSet rs) throws Exception {
     ColumnRow ret = new ColumnRow();
-    ret.tableName = rs.getString("table_name");
+    ret.tableName = rs.getString("full_table_name");
     ret.name = rs.getString("column_name");
     ret.defaultValue = rs.getString("column_default");
     ret.nullable = "YES".equals(rs.getString("is_nullable"));
 
     int charLen = rs.getInt("character_maximum_length");
-    int numPrec = rs.getInt("numeric_precision");
+    int numPrecision = rs.getInt("numeric_precision");
     int numScale = rs.getInt("numeric_scale");
 
     String dataType = rs.getString("data_type");
 
-    if (NOSIZE_COLS.contains(dataType.toUpperCase())) {
+    if (NO_SIZE_COLS.contains(dataType.toUpperCase())) {
       ret.type = dataType;
     } else {
-      ret.type = dataType + sizeToStr(charLen + numPrec, numScale);
+      ret.type = dataType + sizeToStr(charLen + numPrecision, numScale);
     }
     return ret;
   }
+
+  private static final Set<String> NO_SIZE_COLS = new HashSet<>();
+
+  static {
+    NO_SIZE_COLS.add("BIGINT");
+    NO_SIZE_COLS.add("INTEGER");
+    NO_SIZE_COLS.add("DOUBLE PRECISION");
+  }
+
 
   private String sizeToStr(int size, int scale) {
     if (size <= 0) return "";
     if (scale <= 0) return "(" + size + ")";
     return "(" + size + ", " + scale + ")";
+  }
+
+  private final List<String> schemaList = new ArrayList<>();
+
+  @Override
+  public RowReader addSchema(String schemaName) {
+    schemaList.add(schemaName);
+    return this;
+  }
+
+  private String schemas() {
+    return Stream.concat(schemaList.stream(), Stream.of("public"))
+      .map(s -> "'" + s + "'")
+      .collect(Collectors.joining(", "));
   }
 
   @Override
