@@ -131,7 +131,7 @@ public class RowReaderPostgres implements RowReader {
       + "  confrelid::regclass as   toTable, af.attname as   toCol\n"
       + "from pg_attribute af, pg_attribute a,\n"
       + "  (select fk, conrelid,confrelid,conkey[i] as conkey, confkey[i] as confkey, i\n"
-      + "   from (select oid as fk, conrelid,confrelid,conkey,confkey,\n"
+      + "   from (select conname as fk, conrelid,confrelid,conkey,confkey,\n"
       + "                generate_series(1,array_upper(conkey,1)) as i\n"
       + "         from pg_constraint where contype = 'f') ss) ss2\n"
       + "where af.attnum = confkey and af.attrelid = confrelid and\n"
@@ -142,7 +142,7 @@ public class RowReaderPostgres implements RowReader {
         Map<String, ForeignKeyRow> ret = new HashMap<>();
 
         while (rs.next()) {
-          String name = "FK" + rs.getString("fk");
+          String name = rs.getString("fk");
           ForeignKeyRow fk = ret.get(name);
           if (fk == null) ret.put(name, fk = new ForeignKeyRow(name));
           fk.toTable = rs.getString("toTable");

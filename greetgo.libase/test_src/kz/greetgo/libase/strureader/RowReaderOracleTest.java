@@ -10,6 +10,7 @@ import org.testng.annotations.Test;
 import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import static kz.greetgo.libase.utils.TestUtil.exec;
 import static org.fest.assertions.api.Assertions.assertThat;
@@ -148,4 +149,58 @@ public class RowReaderOracleTest extends RowReaderPostgresTest {
       assertThat(table.keyFields.get(0).name.toLowerCase()).isEqualTo("id");
     }
   }
+
+
+  @Override
+  protected Consumer<Map<String, ForeignKeyRow>> readAllForeignKeys_createTableClient(Connection con) {
+    exec(con, "create table client (" +
+      "  id1 int," +
+      "  id2 int," +
+      "  name varchar(100)," +
+      "  primary key(id1, id2)" +
+      ")");
+    return (Map<String, ForeignKeyRow> map) -> System.out.println("map = " + map);
+  }
+
+  @Override
+  protected Consumer<Map<String, ForeignKeyRow>> readAllForeignKeys_createTablePhone(Connection con) {
+    exec(con, "create table phone (" +
+      "  first_id  varchar(50)," +
+      "  second_id bigint," +
+      "  client_id1 int," +
+      "  client_id2 int," +
+      "  phone_number varchar(300)," +
+      "  constraint key001 foreign key (client_id1, client_id2) references client(id1, id2)," +
+      "  primary key(first_id, second_id)" +
+      ")");
+    return (Map<String, ForeignKeyRow> map) -> {
+      assertThat(map).containsKey("key001");
+      ForeignKeyRow row = map.get("key001");
+      assertThat(row.fromTable).isEqualTo("phone");
+      assertThat(row.toTable).isEqualTo("client");
+      assertThat(row.fromColumns).containsExactly("client_id1", "client_id2");
+      assertThat(row.toColumns).containsExactly("id1", "id2");
+    };
+  }
+
+  @Override
+  protected Consumer<Map<String, ForeignKeyRow>> readAllForeignKeys_createTablePhoneCallType(Connection con) {
+    exec(con, "create table phone_call_type (" +
+      "  code varchar(150)," +
+      "  phone_first_id varchar(50)," +
+      "  phone_second_id bigint," +
+      "  description varchar(100)," +
+      "  foreign key (phone_first_id, phone_second_id) references phone(first_id, second_id)," +
+      "  primary key(code)" +
+      ")");
+    return (Map<String, ForeignKeyRow> map) -> {
+      assertThat(map).containsKey("phone_call_type_phone_first_id_fkey");
+      ForeignKeyRow row = map.get("phone_call_type_phone_first_id_fkey");
+      assertThat(row.fromTable).isEqualTo("phone_call_type");
+      assertThat(row.toTable).isEqualTo("phone");
+      assertThat(row.fromColumns).containsExactly("phone_first_id", "phone_second_id");
+      assertThat(row.toColumns).containsExactly("first_id", "second_id");
+    };
+  }
+
 }
