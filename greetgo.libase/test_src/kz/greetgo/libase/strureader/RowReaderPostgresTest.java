@@ -11,6 +11,7 @@ import org.testng.annotations.Test;
 
 import java.sql.Connection;
 import java.util.List;
+import java.util.Map;
 
 import static kz.greetgo.libase.utils.TestUtil.exec;
 import static org.fest.assertions.api.Assertions.assertThat;
@@ -79,13 +80,8 @@ public class RowReaderPostgresTest {
     }
   }
 
-  protected boolean isOracle() {
-    return false;
-  }
-
   @Test
-  public void readTableMoonHello() throws Exception {
-    if (isOracle()) throw new SkipException("Not supported schemas for Oracle");
+  public void readTableHello() throws Exception {
 
     DbWorker dbWorker = dbWorker();
 
@@ -105,7 +101,7 @@ public class RowReaderPostgresTest {
 
   @Test
   public void readAllTableColumns() throws Exception {
-    if (isOracle()) throw new SkipException("For Oracle not supported schemas");
+
     DbWorker dbWorker = dbWorker();
 
     dbWorker.recreateDb(DbSide.FROM);
@@ -133,6 +129,56 @@ public class RowReaderPostgresTest {
       assertThat(columnRowList.get(1).name).isEqualTo("name");
       assertThat(columnRowList.get(2).name).isEqualTo("identifier");
       assertThat(columnRowList.get(3).name).isEqualTo("door");
+    }
+  }
+
+  @Test
+  public void readAllTablePrimaryKeys() throws Exception {
+
+    DbWorker dbWorker = dbWorker();
+
+    dbWorker.recreateDb(DbSide.FROM);
+
+    try (Connection con = dbWorker.connection(DbSide.FROM)) {
+      exec(con, "create table client (" +
+        "  id1 int," +
+        "  id2 int," +
+        "  name varchar(100)," +
+        "  primary key(id1, id2)" +
+        ")");
+      exec(con, "create table moon.hello (" +
+        "  identifier1 int," +
+        "  identifier2 int," +
+        "  identifier3 int," +
+        "  door varchar(100)," +
+        "  primary key (identifier1, identifier2, identifier3)" +
+        ")");
+
+      RowReader rowReader = createRowReader(con).addSchema("moon");
+
+      //
+      //
+      Map<String, PrimaryKeyRow> map = rowReader.readAllTablePrimaryKeys();
+      //
+      //
+
+      assertThat(map).hasSize(2);
+
+      assertThat(map).containsKey("client");
+      assertThat(map).containsKey("moon.hello");
+
+      PrimaryKeyRow client = map.get("client");
+      assertThat(client.tableName).isEqualTo("client");
+      assertThat(client.keyFieldNames).hasSize(2);
+      assertThat(client.keyFieldNames.get(0)).isEqualTo("id1");
+      assertThat(client.keyFieldNames.get(1)).isEqualTo("id2");
+
+      PrimaryKeyRow hello = map.get("moon.hello");
+      assertThat(hello.tableName).isEqualTo("moon.hello");
+      assertThat(hello.keyFieldNames).hasSize(3);
+      assertThat(hello.keyFieldNames.get(0)).isEqualTo("identifier1");
+      assertThat(hello.keyFieldNames.get(1)).isEqualTo("identifier2");
+      assertThat(hello.keyFieldNames.get(2)).isEqualTo("identifier3");
     }
   }
 }

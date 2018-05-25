@@ -101,16 +101,19 @@ public class RowReaderPostgres implements RowReader {
     String sql = "select * from information_schema.key_column_usage"
       + " where constraint_name in ("
       + "   select constraint_name from information_schema.table_constraints"
-      + "   where constraint_schema = 'public' and constraint_type = 'PRIMARY KEY')"
+      + "   where constraint_schema in (" + schemas() + ") and constraint_type = 'PRIMARY KEY')"
       + " order by table_name, ordinal_position";
 
     try (PreparedStatement ps = connection.prepareStatement(sql)) {
       Map<String, PrimaryKeyRow> ret = new HashMap<>();
       try (ResultSet rs = ps.executeQuery()) {
 
-        //noinspection Duplicates
         while (rs.next()) {
+          String tableSchema = rs.getString("table_schema");
           String tableName = rs.getString("table_name");
+          if (tableSchema != null && !tableSchema.equals("public")) {
+            tableName = tableSchema + "." + tableName;
+          }
           PrimaryKeyRow primaryKey = ret.get(tableName);
           if (primaryKey == null) ret.put(tableName, primaryKey = new PrimaryKeyRow(tableName));
           primaryKey.keyFieldNames.add(rs.getString("column_name"));
