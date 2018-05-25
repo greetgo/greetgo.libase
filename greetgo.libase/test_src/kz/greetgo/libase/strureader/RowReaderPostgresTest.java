@@ -22,7 +22,7 @@ public class RowReaderPostgresTest {
   }
 
   protected RowReader createRowReader(Connection con) {
-    return new RowReaderPostgres(con);
+    return new RowReaderPostgres(con).addSchema("moon");
   }
 
   protected String createTableClient(Connection con) {
@@ -90,7 +90,7 @@ public class RowReaderPostgresTest {
     try (Connection con = dbWorker.connection(DbSide.FROM)) {
       exec(con, "create table moon.hello (id int primary key, name varchar(100))");
 
-      DbStru struct = StruReader.read(createRowReader(con).addSchema("moon"));
+      DbStru struct = StruReader.read(createRowReader(con));
 
       Table table = struct.table("moon.hello");
       assertThat(table).isNotNull();
@@ -110,7 +110,7 @@ public class RowReaderPostgresTest {
       exec(con, "create table client (id int primary key, name varchar(100))");
       exec(con, "create table moon.hello (identifier int primary key, door varchar(100))");
 
-      RowReader rowReader = createRowReader(con).addSchema("moon");
+      RowReader rowReader = createRowReader(con);
 
       //
       //
@@ -154,7 +154,7 @@ public class RowReaderPostgresTest {
         "  primary key (identifier1, identifier2, identifier3)" +
         ")");
 
-      RowReader rowReader = createRowReader(con).addSchema("moon");
+      RowReader rowReader = createRowReader(con);
 
       //
       //
@@ -213,7 +213,7 @@ public class RowReaderPostgresTest {
   }
 
   protected Consumer<Map<String, ForeignKeyRow>> readAllForeignKeys_createTablePhoneCallType(Connection con) {
-    exec(con, "create table phone_call_type (" +
+    exec(con, "create table moon.phone_call_type (" +
       "  code varchar(150)," +
       "  phone_first_id varchar(50)," +
       "  phone_second_id bigint," +
@@ -224,7 +224,7 @@ public class RowReaderPostgresTest {
     return (Map<String, ForeignKeyRow> map) -> {
       assertThat(map).containsKey("FKk002");
       ForeignKeyRow row = map.get("FKk002");
-      assertThat(row.fromTable).isEqualTo("phone_call_type");
+      assertThat(row.fromTable).isEqualTo("moon.phone_call_type");
       assertThat(row.toTable).isEqualTo("phone");
       assertThat(row.fromColumns).containsExactly("phone_first_id", "phone_second_id");
       assertThat(row.toColumns).containsExactly("first_id", "second_id");
