@@ -9,6 +9,7 @@ import kz.greetgo.libase.utils.DbWorkerPostgres;
 import org.testng.annotations.Test;
 
 import java.sql.Connection;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -310,5 +311,59 @@ public class RowReaderPostgresTest {
     }
   }
 
+  protected Consumer<Map<String, ViewRow>> readAllViews_createViewClient(Connection con) {
+    exec(con, "create table client1 (id int primary key, code int, f1 int)");
+    exec(con, "create table client2 (id int primary key, code int, f2 int)");
+    exec(con, "create view client as select c1.id as id1, c2.id as id2, c1.code, c1.f1, c2.f2" +
+      " from client1 c1, client2 c2 where c1.code = c2.code");
+    return map -> {
+      assertThat(map).containsKey("client");
+      ViewRow row = map.get("client");
+      assertThat(row.name).isEqualTo("client");
+      assertThat(row.dependenses).containsAll(Arrays.asList("client1", "client2"));
+      assertThat(row.content.replaceAll("\\s+", ""))
+        .isEqualTo("SELECTc1.idASid1,c2.idASid2,c1.code,c1.f1,c2.f2FROMclient1c1,client2c2WHERE(c1.code=c2.code)");
+    };
+  }
 
+  protected Consumer<Map<String, ViewRow>> readAllViews_createViewPhone(Connection con) {
+    exec(con, "create view moon.phone as select 10 x, 20 y, 30 z");
+    return map -> {
+      assertThat(map).containsKey("moon.phone");
+      ViewRow row = map.get("moon.phone");
+      assertThat(row.name).isEqualTo("moon.phone");
+    };
+  }
+
+  protected Consumer<Map<String, ViewRow>> readAllViews_createViewHello(Connection con) {
+    exec(con, "create view boom.hello as select 11 x, 12 y, 13 z");
+    return map -> assertThat(map).doesNotContainKey("boom.hello");
+  }
+
+  @Test
+  public void readAllViews() throws Exception {
+    DbWorker dbWorker = dbWorker();
+
+    dbWorker.recreateDb(DbSide.FROM);
+
+    try (Connection con = dbWorker.connection(DbSide.FROM)) {
+      Consumer<Map<String, ViewRow>> c1 = readAllViews_createViewClient(con);
+      Consumer<Map<String, ViewRow>> c2 = readAllViews_createViewPhone(con);
+      Consumer<Map<String, ViewRow>> c3 = readAllViews_createViewHello(con);
+
+      RowReader rowReader = createRowReader(con);
+
+      //
+      //
+      Map<String, ViewRow> map = rowReader.readAllViews();
+      //
+      //
+
+      assertThat(map).isNotNull();
+
+      c1.accept(map);
+      c2.accept(map);
+      c3.accept(map);
+    }
+  }
 }

@@ -8,6 +8,7 @@ import kz.greetgo.libase.utils.DbWorkerOracle;
 import org.testng.annotations.Test;
 
 import java.sql.Connection;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -231,4 +232,30 @@ public class RowReaderOracleTest extends RowReaderPostgresTest {
     return map -> {};
   }
 
+  @Override
+  protected Consumer<Map<String, ViewRow>> readAllViews_createViewClient(Connection con) {
+    exec(con, "create table client1 (id int primary key, code int, f1 int)");
+    exec(con, "create table client2 (id int primary key, code int, f2 int)");
+    exec(con, "create view client as select c1.id as id1, c2.id as id2, c1.code, c1.f1, c2.f2" +
+      " from client1 c1, client2 c2 where c1.code = c2.code");
+    return map -> {
+      assertThat(map).containsKey("CLIENT");
+      ViewRow row = map.get("CLIENT");
+      assertThat(row.name).isEqualTo("CLIENT");
+      assertThat(row.dependenses).containsAll(Arrays.asList("CLIENT1", "CLIENT2"));
+      assertThat(row.content.replaceAll("\\s+", " "))
+        .isEqualTo("select c1.id as id1, c2.id as id2, c1.code, c1.f1, c2.f2" +
+          " from client1 c1, client2 c2 where c1.code = c2.code");
+    };
+  }
+
+  @Override
+  protected Consumer<Map<String, ViewRow>> readAllViews_createViewPhone(Connection con) {
+    return map -> {};
+  }
+
+  @Override
+  protected Consumer<Map<String, ViewRow>> readAllViews_createViewHello(Connection con) {
+    return map -> {};
+  }
 }

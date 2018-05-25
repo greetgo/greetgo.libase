@@ -156,6 +156,11 @@ public class RowReaderPostgres implements RowReader {
     }
   }
 
+  private static String fullName(String schema, String table) {
+    if ("public".equals(schema)) return table;
+    return schema + '.' + table;
+  }
+
   @Override
   public Map<String, SequenceRow> readAllSequences() throws Exception {
     String sql = "select * from information_schema.sequences where sequence_schema in (" + schemas() + ")";
@@ -165,10 +170,10 @@ public class RowReaderPostgres implements RowReader {
         Map<String, SequenceRow> ret = new HashMap<>();
 
         while (rs.next()) {
-          String name = rs.getString("sequence_name");
-          String schema = rs.getString("sequence_schema");
-          if (!"public".equals(schema)) name = schema + '.' + name;
-          ret.put(name, new SequenceRow(name, rs.getLong("start_value")));
+          ret.put(rs.getString("sequence_name"), new SequenceRow(
+            fullName(rs.getString("sequence_schema"), rs.getString("sequence_name")),
+            rs.getLong("start_value")
+          ));
         }
 
         return ret;
@@ -204,15 +209,17 @@ public class RowReaderPostgres implements RowReader {
   }
 
   private Map<String, ViewRow> readViews() throws SQLException {
-    String sql = "select * from information_schema.views where table_schema = 'public'";
+    String sql = "select * from information_schema.views where table_schema in (" + schemas() + ")";
 
     try (PreparedStatement ps = connection.prepareStatement(sql)) {
       try (ResultSet rs = ps.executeQuery()) {
         Map<String, ViewRow> ret = new HashMap<>();
 
         while (rs.next()) {
-          ViewRow s = new ViewRow(rs.getString("table_name"),
-            killSemicolonInEnd(rs.getString("view_definition")));
+          ViewRow s = new ViewRow(
+            fullName(rs.getString("table_schema"), rs.getString("table_name")),
+            killSemicolonInEnd(rs.getString("view_definition"))
+          );
           ret.put(s.name, s);
         }
 
