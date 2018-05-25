@@ -60,6 +60,7 @@ public class DbWorkerPostgres extends AbstractDbWorker {
 
       try (Connection connection = connection(dbSide)) {
         exec(connection, "create schema moon");
+        exec(connection, "create schema boom");
       }
 
     }

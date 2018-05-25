@@ -158,14 +158,17 @@ public class RowReaderPostgres implements RowReader {
 
   @Override
   public Map<String, SequenceRow> readAllSequences() throws Exception {
-    try (PreparedStatement ps = connection
-      .prepareStatement("select * from information_schema.sequences")) {
+    String sql = "select * from information_schema.sequences where sequence_schema in (" + schemas() + ")";
+
+    try (PreparedStatement ps = connection.prepareStatement(sql)) {
       try (ResultSet rs = ps.executeQuery()) {
         Map<String, SequenceRow> ret = new HashMap<>();
 
         while (rs.next()) {
-          SequenceRow s = new SequenceRow(rs.getString("sequence_name"), rs.getLong("start_value"));
-          ret.put(s.name, s);
+          String name = rs.getString("sequence_name");
+          String schema = rs.getString("sequence_schema");
+          if (!"public".equals(schema)) name = schema + '.' + name;
+          ret.put(name, new SequenceRow(name, rs.getLong("start_value")));
         }
 
         return ret;

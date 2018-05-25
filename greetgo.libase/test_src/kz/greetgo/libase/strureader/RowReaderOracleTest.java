@@ -203,4 +203,32 @@ public class RowReaderOracleTest extends RowReaderPostgresTest {
     };
   }
 
+
+  @Override
+  protected Consumer<Map<String, SequenceRow>> readAllSequences_createSequenceClient(Connection con) {
+    exec(con, "create sequence client");
+    return map -> {
+      assertThat(map).containsKey("CLIENT");
+      SequenceRow row = map.get("CLIENT");
+      assertThat(row.name).isEqualTo("CLIENT");
+      assertThat(row.startFrom).isEqualTo(1);
+    };
+  }
+
+  @Override
+  protected Consumer<Map<String, SequenceRow>> readAllSequences_createSequencePhone(Connection con) {
+    exec(con, "create sequence phone start with 12000");
+    return map -> {
+      assertThat(map).containsKey("PHONE");
+      SequenceRow row = map.get("PHONE");
+      assertThat(row.name).isEqualTo("PHONE");
+      assertThat(row.startFrom).isEqualTo(12000);
+    };
+  }
+
+  @Override
+  protected Consumer<Map<String, SequenceRow>> readAllSequences_createSequenceLeftHello(Connection con) {
+    return map -> {};
+  }
+
 }

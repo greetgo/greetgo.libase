@@ -189,7 +189,7 @@ public class RowReaderPostgresTest {
       "  name varchar(100)," +
       "  primary key(id1, id2)" +
       ")");
-    return (Map<String, ForeignKeyRow> map) -> System.out.println("map = " + map);
+    return map -> {};
   }
 
   protected Consumer<Map<String, ForeignKeyRow>> readAllForeignKeys_createTablePhone(Connection con) {
@@ -202,7 +202,7 @@ public class RowReaderPostgresTest {
       "  constraint k001 foreign key (client_id1, client_id2) references client(id1, id2)," +
       "  primary key(first_id, second_id)" +
       ")");
-    return (Map<String, ForeignKeyRow> map) -> {
+    return map -> {
       assertThat(map).containsKey("FKk001");
       ForeignKeyRow row = map.get("FKk001");
       assertThat(row.fromTable).isEqualTo("phone");
@@ -221,7 +221,7 @@ public class RowReaderPostgresTest {
       "  constraint k002 foreign key (phone_first_id, phone_second_id) references phone(first_id, second_id)," +
       "  primary key(code)" +
       ")");
-    return (Map<String, ForeignKeyRow> map) -> {
+    return map -> {
       assertThat(map).containsKey("FKk002");
       ForeignKeyRow row = map.get("FKk002");
       assertThat(row.fromTable).isEqualTo("moon.phone_call_type");
@@ -257,4 +257,58 @@ public class RowReaderPostgresTest {
       c3.accept(map);
     }
   }
+
+  protected Consumer<Map<String, SequenceRow>> readAllSequences_createSequenceClient(Connection con) {
+    exec(con, "create sequence client");
+    return map -> {
+      assertThat(map).containsKey("client");
+      SequenceRow row = map.get("client");
+      assertThat(row.name).isEqualTo("client");
+      assertThat(row.startFrom).isEqualTo(1);
+    };
+  }
+
+  protected Consumer<Map<String, SequenceRow>> readAllSequences_createSequencePhone(Connection con) {
+    exec(con, "create sequence moon.phone start 12000");
+    return map -> {
+      assertThat(map).containsKey("moon.phone");
+      SequenceRow row = map.get("moon.phone");
+      assertThat(row.name).isEqualTo("moon.phone");
+      assertThat(row.startFrom).isEqualTo(12000);
+    };
+  }
+
+  protected Consumer<Map<String, SequenceRow>> readAllSequences_createSequenceLeftHello(Connection con) {
+    exec(con, "create sequence boom.hello");
+    return map -> assertThat(map).doesNotContainKey("boom.hello");
+  }
+
+  @Test
+  public void readAllSequences() throws Exception {
+    DbWorker dbWorker = dbWorker();
+
+    dbWorker.recreateDb(DbSide.FROM);
+
+    try (Connection con = dbWorker.connection(DbSide.FROM)) {
+      Consumer<Map<String, SequenceRow>> c1 = readAllSequences_createSequenceClient(con);
+      Consumer<Map<String, SequenceRow>> c2 = readAllSequences_createSequencePhone(con);
+      Consumer<Map<String, SequenceRow>> c3 = readAllSequences_createSequenceLeftHello(con);
+
+      RowReader rowReader = createRowReader(con);
+
+      //
+      //
+      Map<String, SequenceRow> map = rowReader.readAllSequences();
+      //
+      //
+
+      assertThat(map).isNotNull();
+
+      c1.accept(map);
+      c2.accept(map);
+      c3.accept(map);
+    }
+  }
+
+
 }
