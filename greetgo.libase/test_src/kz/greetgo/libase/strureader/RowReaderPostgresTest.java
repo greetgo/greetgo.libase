@@ -324,17 +324,23 @@ public class RowReaderPostgresTest {
       ViewRow row = map.get("client");
       assertThat(row.name).isEqualTo("client");
       assertThat(row.dependenses).containsAll(Arrays.asList("client1", "moon.client2"));
-      assertThat(row.content.replaceAll("\\s+", " "))
-        .isEqualTo("asd");
+      assertThat(row.content.replaceAll("\\s+", " ")).isEqualTo("SELECT c1.id AS id1, c2.id AS id2, c1.code," +
+        " c1.f1, c2.f2 FROM client1 c1, moon.client2 c2 WHERE (c1.code = c2.code)");
     };
   }
 
   protected Consumer<Map<String, ViewRow>> readAllViews_createViewPhone(Connection con) {
-    exec(con, "create view moon.phone as select 10 x, 20 y, 30 z");
+    exec(con, "create table pencil1 (id int primary key, code int, f1 int)");
+    exec(con, "create table moon.pencil2 (id int primary key, code int, f2 int)");
+    exec(con, "create view moon.phone as select c1.id as id1, c2.id as id2, c1.code, c1.f1, c2.f2" +
+      " from pencil1 c1, moon.pencil2 c2 where c1.code = c2.code");
     return map -> {
       assertThat(map).containsKey("moon.phone");
       ViewRow row = map.get("moon.phone");
       assertThat(row.name).isEqualTo("moon.phone");
+      assertThat(row.dependenses).containsAll(Arrays.asList("pencil1", "moon.pencil2"));
+      assertThat(row.content.replaceAll("\\s+", " ")).isEqualTo("SELECT c1.id AS id1, c2.id AS id2, c1.code," +
+        " c1.f1, c2.f2 FROM pencil1 c1, moon.pencil2 c2 WHERE (c1.code = c2.code)");
     };
   }
 

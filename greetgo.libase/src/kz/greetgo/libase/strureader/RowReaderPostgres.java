@@ -170,10 +170,11 @@ public class RowReaderPostgres implements RowReader {
         Map<String, SequenceRow> ret = new HashMap<>();
 
         while (rs.next()) {
-          ret.put(rs.getString("sequence_name"), new SequenceRow(
+          SequenceRow row = new SequenceRow(
             fullName(rs.getString("sequence_schema"), rs.getString("sequence_name")),
             rs.getLong("start_value")
-          ));
+          );
+          ret.put(row.name, row);
         }
 
         return ret;
@@ -191,8 +192,15 @@ public class RowReaderPostgres implements RowReader {
   }
 
   private void addDependencies(Map<String, ViewRow> ret) throws SQLException {
-    String sql = "select distinct view_name, table_name"
-      + " from information_schema.view_column_usage order by view_name, table_name";
+    String sql = "with v as (select distinct\n" +
+      "  case when a.view_schema = 'public' then a.view_name\n" +
+      "      else a.view_schema||'.'||a.view_name end as view_name,\n" +
+      "  case when a.table_schema = 'public' then a.table_name\n" +
+      "      else a.table_schema||'.'||a.table_name end as table_name\n" +
+      "  from information_schema.view_column_usage a\n" +
+      "  where view_schema in (" + schemas() + ")\n" +
+      ") select * from v\n" +
+      "order by view_name, table_name";
 
     try (PreparedStatement ps = connection.prepareStatement(sql)) {
       try (ResultSet rs = ps.executeQuery()) {
