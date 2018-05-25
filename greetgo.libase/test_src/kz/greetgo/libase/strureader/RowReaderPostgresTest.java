@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import static java.util.function.UnaryOperator.identity;
+import static java.util.stream.Collectors.toMap;
 import static kz.greetgo.libase.utils.TestUtil.exec;
 import static org.fest.assertions.api.Assertions.assertThat;
 
@@ -314,16 +316,16 @@ public class RowReaderPostgresTest {
 
   protected Consumer<Map<String, ViewRow>> readAllViews_createViewClient(Connection con) {
     exec(con, "create table client1 (id int primary key, code int, f1 int)");
-    exec(con, "create table client2 (id int primary key, code int, f2 int)");
+    exec(con, "create table moon.client2 (id int primary key, code int, f2 int)");
     exec(con, "create view client as select c1.id as id1, c2.id as id2, c1.code, c1.f1, c2.f2" +
-      " from client1 c1, client2 c2 where c1.code = c2.code");
+      " from client1 c1, moon.client2 c2 where c1.code = c2.code");
     return map -> {
       assertThat(map).containsKey("client");
       ViewRow row = map.get("client");
       assertThat(row.name).isEqualTo("client");
-      assertThat(row.dependenses).containsAll(Arrays.asList("client1", "client2"));
-      assertThat(row.content.replaceAll("\\s+", ""))
-        .isEqualTo("SELECTc1.idASid1,c2.idASid2,c1.code,c1.f1,c2.f2FROMclient1c1,client2c2WHERE(c1.code=c2.code)");
+      assertThat(row.dependenses).containsAll(Arrays.asList("client1", "moon.client2"));
+      assertThat(row.content.replaceAll("\\s+", " "))
+        .isEqualTo("asd");
     };
   }
 
@@ -475,4 +477,86 @@ public class RowReaderPostgresTest {
       c3.accept(map);
     }
   }
+
+  protected Consumer<Map<String, StoreFuncRow>> readAllFuncs_createFuncHelloPlus(Connection con) {
+    exec(con, "" +
+      "create function hello_plus(a int, b int) returns int\n" +
+      "language PlPgSql\n" +
+      "as $code$ \n" +
+      "begin\n" +
+      "  return a + b;\n" +
+      "end ;\n" +
+      "$code$");
+    return map -> {
+      assertThat(map).containsKey("hello_plus");
+      StoreFuncRow row = map.get("hello_plus");
+      assertThat(row.name).isEqualTo("hello_plus");
+      assertThat(row.argTypes).isEqualTo(Arrays.asList("int4", "int4"));
+      assertThat(row.argNames).isEqualTo(Arrays.asList("a", "b"));
+      assertThat(row.returns).isEqualTo("int4");
+      assertThat(row.language).isEqualTo("PlPgSql".toLowerCase());
+      assertThat(row.source.replaceAll("\\s+", " ")).isEqualTo(" begin return a + b; end ; ");
+    };
+  }
+
+  protected Consumer<Map<String, StoreFuncRow>> readAllFuncs_createFuncHelloMinus(Connection con) {
+    exec(con, "" +
+      "create function moon.hello_minus(a int, b int) returns int\n" +
+      "language PlPgSql\n" +
+      "as $code$ \n" +
+      "begin\n" +
+      "  return a - b;\n" +
+      "end ;\n" +
+      "$code$");
+    return map -> {
+      assertThat(map).containsKey("moon.hello_minus");
+      StoreFuncRow row = map.get("moon.hello_minus");
+      assertThat(row.name).isEqualTo("moon.hello_minus");
+      assertThat(row.argTypes).isEqualTo(Arrays.asList("int4", "int4"));
+      assertThat(row.argNames).isEqualTo(Arrays.asList("a", "b"));
+      assertThat(row.returns).isEqualTo("int4");
+      assertThat(row.language).isEqualTo("PlPgSql".toLowerCase());
+      assertThat(row.source.replaceAll("\\s+", " ")).isEqualTo(" begin return a - b; end ; ");
+    };
+  }
+
+  protected Consumer<Map<String, StoreFuncRow>> readAllFuncs_createFuncHelloMul(Connection con) {
+    exec(con, "" +
+      "create function boom.hello_mul(a int, b int) returns int\n" +
+      "language PlPgSql\n" +
+      "as $code$ \n" +
+      "begin\n" +
+      "  return a * b;\n" +
+      "end ;\n" +
+      "$code$");
+    return map -> assertThat(map).doesNotContainKey("boom.hello_mul");
+  }
+
+  @Test
+  public void readAllFuncs() throws Exception {
+    DbWorker dbWorker = dbWorker();
+
+    dbWorker.recreateDb(DbSide.FROM);
+
+    try (Connection con = dbWorker.connection(DbSide.FROM)) {
+      Consumer<Map<String, StoreFuncRow>> c1 = readAllFuncs_createFuncHelloPlus(con);
+      Consumer<Map<String, StoreFuncRow>> c2 = readAllFuncs_createFuncHelloMinus(con);
+      Consumer<Map<String, StoreFuncRow>> c3 = readAllFuncs_createFuncHelloMul(con);
+
+      RowReader rowReader = createRowReader(con);
+
+      //
+      //
+      List<StoreFuncRow> map = rowReader.readAllFuncs();
+      //
+      //
+
+      assertThat(map).isNotNull();
+
+      c1.accept(map.stream().collect(toMap(r -> r.name, identity())));
+      c2.accept(map.stream().collect(toMap(r -> r.name, identity())));
+      c3.accept(map.stream().collect(toMap(r -> r.name, identity())));
+    }
+  }
+
 }

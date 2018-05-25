@@ -241,12 +241,14 @@ public class RowReaderPostgres implements RowReader {
   }
 
   private List<StoreFuncRow> readFuncsTop() throws SQLException {
-    String sql = "SELECT\n"
-      + "  p.prorettype as returnType, p.proname as name, \n"
-      + "  array_to_string(p.proargtypes, ';') as argTypes, \n"
-      + "  array_to_string(p.proargnames, ';') as argNames,  p.prolang, p.prosrc \n"
-      + "FROM    pg_catalog.pg_namespace n JOIN    pg_catalog.pg_proc p "
-      + "ON      pronamespace = n.oid WHERE nspname = 'public'";
+    String sql = "SELECT\n" +
+      "  p.proRetType as returnType,\n" +
+      "  case when n.nspName = 'public' then p.proName else n.nspName||'.'||p.proName end as name, \n" +
+      "  array_to_string(p.proArgTypes, ';') as argTypes, \n" +
+      "  array_to_string(p.proArgNames, ';') as argNames,\n" +
+      "  p.proLang, p.proSrc \n" +
+      "FROM    pg_catalog.pg_namespace n JOIN pg_catalog.pg_proc p \n" +
+      "ON      proNamespace = n.oid WHERE n.nspName in (" + schemas() + ")";
 
     try (PreparedStatement ps = connection.prepareStatement(sql)) {
       try (ResultSet rs = ps.executeQuery()) {
@@ -259,9 +261,9 @@ public class RowReaderPostgres implements RowReader {
           x.__argTypesStr = rs.getString("argTypes");
           x.__argNamesStr = rs.getString("argNames");
           x.__returns = rs.getString("returnType");
-          x.__langId = rs.getString("prolang");
+          x.__langId = rs.getString("proLang");
 
-          x.source = rs.getString("prosrc");
+          x.source = rs.getString("proSrc");
 
           ret.add(x);
         }
@@ -282,7 +284,7 @@ public class RowReaderPostgres implements RowReader {
     }
 
     private String loadType(String typeId) throws Exception {
-      String sql = "select typname from pg_type where oid = ?";
+      String sql = "select typName from pg_type where oid = ?";
 
       try (PreparedStatement ps = connection.prepareStatement(sql)) {
         ps.setLong(1, Long.parseLong(typeId));

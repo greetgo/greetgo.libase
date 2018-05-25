@@ -9,23 +9,20 @@ public class StoreFuncRow {
   public final List<String> argNames = new ArrayList<>();
   public String returns;
   public String source, language;
-  
+
   public String __argTypesStr;
   public String __argNamesStr;
   public String __returns;
   public String __langId;
-  
+
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder();
-    sb.append(name).append(' ').append(__argTypesStr).append(' ').append(__argNamesStr);
-    sb.append("\n    returns ").append(__returns);
-    sb.append("\n    langId ").append(__langId);
-    sb.append("\n    ::: ").append(argTypes).append(" ").append(argNames).append("");
-    sb.append("\n    ::: returns ").append(returns);
-    sb.append("\n    ::: language ").append(language);
-    sb.append("\n    source {").append(source.replaceAll("\n", " ")).append('}');
-    
-    return sb.toString();
+    return name + ' ' + __argTypesStr + ' ' + __argNamesStr +
+      "\n    returns " + __returns +
+      "\n    langId " + __langId +
+      "\n    ::: " + argTypes + " " + argNames + "" +
+      "\n    ::: returns " + returns +
+      "\n    ::: language " + language +
+      "\n    source {" + source.replaceAll("\n", " ") + '}';
   }
 }

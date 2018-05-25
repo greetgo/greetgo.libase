@@ -311,4 +311,35 @@ public class RowReaderOracleTest extends RowReaderPostgresTest {
   protected Consumer<Map<String, String>> readColumnComments_createTableHello(Connection con) {
     return map -> {};
   }
+
+  @Override
+  protected Consumer<Map<String, StoreFuncRow>> readAllFuncs_createFuncHelloPlus(Connection con) {
+    exec(con, "" +
+      "create function hello_plus(a int, b int) returns int\n" +
+      "begin\n" +
+      "  return a + b;\n" +
+      "end ;\n"
+    );
+    return map -> {
+      assertThat(map).containsKey("HELLO_PLUS");
+      StoreFuncRow row = map.get("HELLO_PLUS");
+      assertThat(row.name).isEqualTo("HELLO_PLUS");
+      assertThat(row.argTypes).isEmpty();
+      assertThat(row.argNames).isEmpty();
+      assertThat(row.returns).isNull();
+      assertThat(row.language).isNull();
+      assertThat(row.source.replaceAll("\\s+", " "))
+        .isEqualTo("function hello_plus(a int, b int) returns int begin return a + b; end ; ");
+    };
+  }
+
+  @Override
+  protected Consumer<Map<String, StoreFuncRow>> readAllFuncs_createFuncHelloMinus(Connection con) {
+    return map -> {};
+  }
+
+  @Override
+  protected Consumer<Map<String, StoreFuncRow>> readAllFuncs_createFuncHelloMul(Connection con) {
+    return map -> {};
+  }
 }
