@@ -384,14 +384,16 @@ public class RowReaderPostgres implements RowReader {
   @Override
   public Map<String, String> readColumnComments() throws Exception {
 
-    String sql = "with res as (" +
-      "  select cols.table_name, cols.column_name, (" +
-      "    select pg_catalog.col_description(oid,cols.ordinal_position::int)" +
-      "    from pg_catalog.pg_class c where c.relname=cols.table_name" +
-      "  ) as column_comment" +
-      "  from information_schema.columns cols" +
-      "  where cols.table_schema='public'" +
-      ")" +
+    String sql = "with res as (select\n" +
+      "    case when cols.table_schema = 'public' then cols.table_name \n" +
+      "    else cols.table_schema||'.'||cols.table_name end as table_name,\n" +
+      "    cols.column_name, (\n" +
+      "      select pg_catalog.col_description(oid,cols.ordinal_position::int)\n" +
+      "      from pg_catalog.pg_class c where c.relname=cols.table_name\n" +
+      "    ) as column_comment\n" +
+      "  from information_schema.columns cols\n" +
+      "  where cols.table_schema in ('public', 'moon')\n" +
+      ")\n" +
       "select * from res where column_comment is not null";
 
     try (PreparedStatement ps = connection.prepareStatement(sql)) {

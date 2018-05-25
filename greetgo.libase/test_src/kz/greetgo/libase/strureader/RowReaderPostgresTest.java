@@ -6,6 +6,7 @@ import kz.greetgo.libase.model.Table;
 import kz.greetgo.libase.utils.DbSide;
 import kz.greetgo.libase.utils.DbWorker;
 import kz.greetgo.libase.utils.DbWorkerPostgres;
+import org.fest.assertions.data.MapEntry;
 import org.testng.annotations.Test;
 
 import java.sql.Connection;
@@ -407,6 +408,63 @@ public class RowReaderPostgresTest {
       //
       //
       Map<String, String> map = rowReader.readTableComments();
+      //
+      //
+
+      assertThat(map).isNotNull();
+
+      c1.accept(map);
+      c2.accept(map);
+      c3.accept(map);
+    }
+  }
+
+  protected Consumer<Map<String, String>> readColumnComments_createTableClient(Connection con) {
+    exec(con, "create table client (id int, name int)");
+    exec(con, "comment on column client.id   is 'Hello client id'  ");
+    exec(con, "comment on column client.name is 'Hello client name'");
+    return map -> {
+      assertThat(map).contains(MapEntry.entry("client.id", "Hello client id"));
+      assertThat(map).contains(MapEntry.entry("client.name", "Hello client name"));
+    };
+  }
+
+  protected Consumer<Map<String, String>> readColumnComments_createTablePhone(Connection con) {
+    exec(con, "create table moon.phone (id int, name int)");
+    exec(con, "comment on column moon.phone.id   is 'Hello phone id'  ");
+    exec(con, "comment on column moon.phone.name is 'Hello phone name'");
+    return map -> {
+      assertThat(map).contains(MapEntry.entry("moon.phone.id", "Hello phone id"));
+      assertThat(map).contains(MapEntry.entry("moon.phone.name", "Hello phone name"));
+    };
+  }
+
+  protected Consumer<Map<String, String>> readColumnComments_createTableHello(Connection con) {
+    exec(con, "create table boom.hello (id int, name int)");
+    exec(con, "comment on column boom.hello.id   is 'Hello id'  ");
+    exec(con, "comment on column boom.hello.name is 'Hello name'");
+    return map -> {
+      assertThat(map).doesNotContainKey("boom.hello.id");
+      assertThat(map).doesNotContainKey("boom.hello.name");
+    };
+  }
+
+  @Test
+  public void readColumnComments() throws Exception {
+    DbWorker dbWorker = dbWorker();
+
+    dbWorker.recreateDb(DbSide.FROM);
+
+    try (Connection con = dbWorker.connection(DbSide.FROM)) {
+      Consumer<Map<String, String>> c1 = readColumnComments_createTableClient(con);
+      Consumer<Map<String, String>> c2 = readColumnComments_createTablePhone(con);
+      Consumer<Map<String, String>> c3 = readColumnComments_createTableHello(con);
+
+      RowReader rowReader = createRowReader(con);
+
+      //
+      //
+      Map<String, String> map = rowReader.readColumnComments();
       //
       //
 

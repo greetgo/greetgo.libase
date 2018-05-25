@@ -5,6 +5,7 @@ import kz.greetgo.libase.model.Table;
 import kz.greetgo.libase.utils.DbSide;
 import kz.greetgo.libase.utils.DbWorker;
 import kz.greetgo.libase.utils.DbWorkerOracle;
+import org.fest.assertions.data.MapEntry;
 import org.testng.annotations.Test;
 
 import java.sql.Connection;
@@ -281,6 +282,33 @@ public class RowReaderOracleTest extends RowReaderPostgresTest {
 
   @Override
   protected Consumer<Map<String, String>> readTableComments_createTableHello(Connection con) {
+    return map -> {};
+  }
+
+  @Override
+  protected Consumer<Map<String, String>> readColumnComments_createTableClient(Connection con) {
+    exec(con, "create table client (id int, name int)");
+    exec(con, "comment on column client.id   is 'Hello client id'  ");
+    exec(con, "comment on column client.name is 'Hello client name'");
+    return map -> {
+      assertThat(map).contains(MapEntry.entry("CLIENT.ID", "Hello client id"));
+      assertThat(map).contains(MapEntry.entry("CLIENT.NAME", "Hello client name"));
+    };
+  }
+
+  @Override
+  protected Consumer<Map<String, String>> readColumnComments_createTablePhone(Connection con) {
+    exec(con, "create table phone (id int, name int)");
+    exec(con, "comment on column phone.id   is 'Hello phone id'  ");
+    exec(con, "comment on column phone.name is 'Hello phone name'");
+    return map -> {
+      assertThat(map).contains(MapEntry.entry("PHONE.ID", "Hello phone id"));
+      assertThat(map).contains(MapEntry.entry("PHONE.NAME", "Hello phone name"));
+    };
+  }
+
+  @Override
+  protected Consumer<Map<String, String>> readColumnComments_createTableHello(Connection con) {
     return map -> {};
   }
 }
