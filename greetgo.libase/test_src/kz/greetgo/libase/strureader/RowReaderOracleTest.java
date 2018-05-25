@@ -342,4 +342,24 @@ public class RowReaderOracleTest extends RowReaderPostgresTest {
   protected Consumer<Map<String, StoreFuncRow>> readAllFuncs_createFuncHelloMul(Connection con) {
     return map -> {};
   }
+
+  @Override
+  protected Consumer<Map<String, TriggerRow>> readAllTriggers_createTriggerSet1(Connection con) {
+    exec(con, "create table chair (id int, value int)");
+    exec(con, "create trigger chair_set_1 before insert on chair for each row begin :NEW.value := 1; end");
+    return map -> {
+      assertThat(map).containsKey("CHAIR_SET_1");
+      TriggerRow row = map.get("CHAIR_SET_1");
+      assertThat(row.tableName).isEqualTo("CHAIR");
+      assertThat(row.actionStatement).isEqualTo("begin :NEW.value := 1; end");
+      assertThat(row.actionOrientation).isNull();
+      assertThat(row.actionTiming).isNull();
+      assertThat(row.eventManipulation).isEqualTo("chair_set_1 before insert on chair for each row ");
+    };
+  }
+
+  @Override
+  protected Consumer<Map<String, TriggerRow>> readAllTriggers_createTriggerSet2(Connection con) {
+    return map -> {};
+  }
 }

@@ -4,13 +4,14 @@ import kz.greetgo.libase.errors.IllegalOracleVersion;
 import kz.greetgo.libase.errors.NoDbObject;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 public class TestUtil {
   public static void exec(Connection con, String sql) {
-    try (PreparedStatement ps = con.prepareStatement(sql)) {
-      ps.executeUpdate();
+
+    try (Statement statement = con.createStatement()) {
+      statement.execute(sql);
       System.out.println("EXEC SQL: " + sql);
     } catch (SQLException e) {
       throw convertError(e);

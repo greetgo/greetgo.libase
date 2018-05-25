@@ -565,4 +565,72 @@ public class RowReaderPostgresTest {
     }
   }
 
+  protected Consumer<Map<String, TriggerRow>> readAllTriggers_createTriggerSet1(Connection con) {
+    exec(con, "create table chair (id int, value int)");
+    exec(con, "create function chair_set_1() returns trigger\n" +
+      "language PlPgSql\n" +
+      "as $sql$\n" +
+      "begin\n" +
+      "  NEW.value := 1;\n" +
+      "end ;\n" +
+      "$sql$");
+    exec(con, "create trigger trigger_set1 before insert on chair" +
+      " FOR EACH ROW EXECUTE PROCEDURE chair_set_1()");
+    return map -> {
+      assertThat(map).containsKey("trigger_set1");
+      TriggerRow row = map.get("trigger_set1");
+      assertThat(row.tableName).isEqualTo("chair");
+      assertThat(row.actionStatement).isEqualTo("EXECUTE PROCEDURE chair_set_1()");
+      assertThat(row.actionOrientation).isEqualTo("ROW");
+      assertThat(row.actionTiming).isEqualTo("BEFORE");
+      assertThat(row.eventManipulation).isEqualTo("INSERT");
+    };
+  }
+
+  protected Consumer<Map<String, TriggerRow>> readAllTriggers_createTriggerSet2(Connection con) {
+    exec(con, "create table moon.chair (id int, value int)");
+    exec(con, "create function moon.chair_set_2() returns trigger\n" +
+      "language PlPgSql\n" +
+      "as $sql$\n" +
+      "begin\n" +
+      "  NEW.value := 2;\n" +
+      "end ;\n" +
+      "$sql$");
+    exec(con, "create trigger trigger_set2 before insert on chair" +
+      " FOR EACH ROW EXECUTE PROCEDURE moon.chair_set_2()");
+    return map -> {
+      assertThat(map).containsKey("trigger_set2");
+      TriggerRow row = map.get("trigger_set2");
+      assertThat(row.tableName).isEqualTo("chair");
+      assertThat(row.actionStatement).isEqualTo("EXECUTE PROCEDURE moon.chair_set_2()");
+      assertThat(row.actionOrientation).isEqualTo("ROW");
+      assertThat(row.actionTiming).isEqualTo("BEFORE");
+      assertThat(row.eventManipulation).isEqualTo("INSERT");
+    };
+  }
+
+  @Test
+  public void readAllTriggers() throws Exception {
+    DbWorker dbWorker = dbWorker();
+
+    dbWorker.recreateDb(DbSide.FROM);
+
+    try (Connection con = dbWorker.connection(DbSide.FROM)) {
+      Consumer<Map<String, TriggerRow>> c1 = readAllTriggers_createTriggerSet1(con);
+      Consumer<Map<String, TriggerRow>> c2 = readAllTriggers_createTriggerSet2(con);
+
+      RowReader rowReader = createRowReader(con);
+
+      //
+      //
+      Map<String, TriggerRow> map = rowReader.readAllTriggers();
+      //
+      //
+
+      assertThat(map).isNotNull();
+
+      c1.accept(map);
+      c2.accept(map);
+    }
+  }
 }
