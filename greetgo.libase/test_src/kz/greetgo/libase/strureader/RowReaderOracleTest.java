@@ -258,4 +258,29 @@ public class RowReaderOracleTest extends RowReaderPostgresTest {
   protected Consumer<Map<String, ViewRow>> readAllViews_createViewHello(Connection con) {
     return map -> {};
   }
+
+  @Override
+  protected Consumer<Map<String, String>> readTableComments_createTableClient(Connection con) {
+    exec(con, "create table client(id int)");
+    exec(con, "comment on table client is 'Hello Client'");
+    return map -> {
+      assertThat(map).containsKey("CLIENT");
+      assertThat(map.get("CLIENT")).isEqualTo("Hello Client");
+    };
+  }
+
+  @Override
+  protected Consumer<Map<String, String>> readTableComments_createTablePhone(Connection con) {
+    exec(con, "create table PHONE(id int)");
+    exec(con, "comment on table PHONE is 'Hello Phone'");
+    return map -> {
+      assertThat(map).containsKey("PHONE");
+      assertThat(map.get("PHONE")).isEqualTo("Hello Phone");
+    };
+  }
+
+  @Override
+  protected Consumer<Map<String, String>> readTableComments_createTableHello(Connection con) {
+    return map -> {};
+  }
 }

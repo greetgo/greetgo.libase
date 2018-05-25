@@ -356,24 +356,25 @@ public class RowReaderPostgres implements RowReader {
   @Override
   public Map<String, String> readTableComments() throws Exception {
 
-    String sql = "with tt as (" +
-      "  select tt.table_name from information_schema.tables tt" +
-      "  where tt.table_schema = 'public' and table_name not in" +
-      "  (select table_name from information_schema.views where table_schema = 'public')" +
-      "), res as (" +
-      "  select tt.table_name, pg_catalog.obj_description(c.oid) cmmnt" +
-      "  from tt, pg_catalog.pg_class c" +
-      "  where tt.table_name = c.relname" +
-      ")" +
+    String sql = "with tt as (\n" +
+      "  select tt.table_name, tt.table_schema from information_schema.tables tt\n" +
+      "  where tt.table_schema in ('public', 'moon') and table_name not in\n" +
+      "  (select table_name from information_schema.views where table_schema in ('public', 'moon'))\n" +
+      "), res as (\n" +
+      "  select case when tt.table_schema = 'public' then tt.table_name\n" +
+      "              else tt.table_schema||'.'||tt.table_name end as table_name,\n" +
+      "    pg_catalog.obj_description(c.oid) as cmmnt\n" +
+      "  from tt, pg_catalog.pg_class c\n" +
+      "  where tt.table_name = c.relname\n" +
+      ")\n" +
       "select * from res where cmmnt is not null";
 
     try (PreparedStatement ps = connection.prepareStatement(sql)) {
 
       try (ResultSet rs = ps.executeQuery()) {
         Map<String, String> ret = new HashMap<>();
-        while (rs.next()) {
-          ret.put(rs.getString("table_name"), rs.getString("cmmnt"));
-        }
+        while (rs.next()) ret.put(rs.getString("table_name"), rs.getString("cmmnt"));
+
         return ret;
       }
 

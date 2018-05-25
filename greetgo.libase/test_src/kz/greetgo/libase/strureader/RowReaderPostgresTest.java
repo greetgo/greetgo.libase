@@ -366,4 +366,55 @@ public class RowReaderPostgresTest {
       c3.accept(map);
     }
   }
+
+  protected Consumer<Map<String, String>> readTableComments_createTableClient(Connection con) {
+    exec(con, "create table client(id int)");
+    exec(con, "comment on table client is 'Hello Client'");
+    return map -> {
+      assertThat(map).containsKey("client");
+      assertThat(map.get("client")).isEqualTo("Hello Client");
+    };
+  }
+
+  protected Consumer<Map<String, String>> readTableComments_createTablePhone(Connection con) {
+    exec(con, "create table moon.phone(id int)");
+    exec(con, "comment on table moon.phone is 'Hello Phone'");
+    return map -> {
+      assertThat(map).containsKey("moon.phone");
+      assertThat(map.get("moon.phone")).isEqualTo("Hello Phone");
+    };
+  }
+
+  protected Consumer<Map<String, String>> readTableComments_createTableHello(Connection con) {
+    exec(con, "create table boom.hello(id int)");
+    exec(con, "comment on table boom.hello is 'Hello'");
+    return map -> assertThat(map).doesNotContainKey("boom.hello");
+  }
+
+  @Test
+  public void readTableComments() throws Exception {
+    DbWorker dbWorker = dbWorker();
+
+    dbWorker.recreateDb(DbSide.FROM);
+
+    try (Connection con = dbWorker.connection(DbSide.FROM)) {
+      Consumer<Map<String, String>> c1 = readTableComments_createTableClient(con);
+      Consumer<Map<String, String>> c2 = readTableComments_createTablePhone(con);
+      Consumer<Map<String, String>> c3 = readTableComments_createTableHello(con);
+
+      RowReader rowReader = createRowReader(con);
+
+      //
+      //
+      Map<String, String> map = rowReader.readTableComments();
+      //
+      //
+
+      assertThat(map).isNotNull();
+
+      c1.accept(map);
+      c2.accept(map);
+      c3.accept(map);
+    }
+  }
 }
