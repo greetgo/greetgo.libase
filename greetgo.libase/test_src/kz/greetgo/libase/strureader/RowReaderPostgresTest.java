@@ -199,12 +199,12 @@ public class RowReaderPostgresTest {
       "  client_id1 int," +
       "  client_id2 int," +
       "  phone_number varchar(300)," +
-      "  constraint key001 foreign key (client_id1, client_id2) references client(id1, id2)," +
+      "  constraint k001 foreign key (client_id1, client_id2) references client(id1, id2)," +
       "  primary key(first_id, second_id)" +
       ")");
     return (Map<String, ForeignKeyRow> map) -> {
-      assertThat(map).containsKey("key001");
-      ForeignKeyRow row = map.get("key001");
+      assertThat(map).containsKey("FKk001");
+      ForeignKeyRow row = map.get("FKk001");
       assertThat(row.fromTable).isEqualTo("phone");
       assertThat(row.toTable).isEqualTo("client");
       assertThat(row.fromColumns).containsExactly("client_id1", "client_id2");
@@ -218,12 +218,12 @@ public class RowReaderPostgresTest {
       "  phone_first_id varchar(50)," +
       "  phone_second_id bigint," +
       "  description varchar(100)," +
-      "  foreign key (phone_first_id, phone_second_id) references phone(first_id, second_id)," +
+      "  constraint k002 foreign key (phone_first_id, phone_second_id) references phone(first_id, second_id)," +
       "  primary key(code)" +
       ")");
     return (Map<String, ForeignKeyRow> map) -> {
-      assertThat(map).containsKey("phone_call_type_phone_first_id_fkey");
-      ForeignKeyRow row = map.get("phone_call_type_phone_first_id_fkey");
+      assertThat(map).containsKey("FKk002");
+      ForeignKeyRow row = map.get("FKk002");
       assertThat(row.fromTable).isEqualTo("phone_call_type");
       assertThat(row.toTable).isEqualTo("phone");
       assertThat(row.fromColumns).containsExactly("phone_first_id", "phone_second_id");

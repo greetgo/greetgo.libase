@@ -142,7 +142,7 @@ public class RowReaderPostgres implements RowReader {
         Map<String, ForeignKeyRow> ret = new HashMap<>();
 
         while (rs.next()) {
-          String name = rs.getString("fk");
+          String name = "FK" + rs.getString("fk");
           ForeignKeyRow fk = ret.get(name);
           if (fk == null) ret.put(name, fk = new ForeignKeyRow(name));
           fk.toTable = rs.getString("toTable");
