@@ -63,6 +63,8 @@ public class RowReaderOracle implements RowReader {
     int dataPrec = rs.getInt("data_precision");
     int dataScale = rs.getInt("data_scale");
 
+    ret.typeLen = dataLen;
+
     String dataType = rs.getString("data_type");
     String dataTypeU = dataType.toUpperCase();
 

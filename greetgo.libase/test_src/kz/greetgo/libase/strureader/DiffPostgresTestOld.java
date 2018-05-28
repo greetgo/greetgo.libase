@@ -37,8 +37,6 @@ public class DiffPostgresTestOld {
 
     List<Change> changes = Comparer.compare(to, from);
 
-    Comparer.sort(changes);
-
     SqlGeneratorPostgres g = new SqlGeneratorPostgres();
     List<String> sqlResult = new ArrayList<>();
     g.generate(sqlResult, changes);

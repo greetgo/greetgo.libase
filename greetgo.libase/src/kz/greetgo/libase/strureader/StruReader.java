@@ -31,9 +31,8 @@ public class StruReader {
     for (ColumnRow colRow : allTableColumns) {
       Table table = (Table)ret.relations.get(colRow.tableName);
       if (table == null) ret.relations.put(colRow.tableName, table = new Table(colRow.tableName));
-      table.allFields.add(new Field(table, colRow.name, colRow.type, colRow.nullable,
-          colRow.defaultValue));
-      
+      table.allFields.add(new Field(table, colRow.name, colRow.type,
+        colRow.typeLen, colRow.nullable, colRow.defaultValue));
     }
     
     long t3 = System.currentTimeMillis();

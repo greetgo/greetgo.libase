@@ -34,7 +34,7 @@ public class RowReaderOracleTest extends RowReaderPostgresTest {
     exec(con, "" +
       "create table CLIENT (" +
       "  id int primary key," +
-      "  name varchar2(100)" +
+      "  name varchar2(153)" +
       ")");
     return "CLIENT";
   }

@@ -1,6 +1,7 @@
 package kz.greetgo.libase.strureader;
 
 import kz.greetgo.libase.model.DbStru;
+import kz.greetgo.libase.model.Field;
 import kz.greetgo.libase.model.ForeignKey;
 import kz.greetgo.libase.model.Table;
 import kz.greetgo.libase.utils.DbSide;
@@ -33,7 +34,7 @@ public class RowReaderPostgresTest {
     exec(con, "" +
       "create table client (" +
       "  id int primary key," +
-      "  name varchar(100)" +
+      "  name varchar(153)" +
       ")");
     return "client";
   }
@@ -63,6 +64,12 @@ public class RowReaderPostgresTest {
       assertThat(client).isNotNull();
       assertThat(client.keyFields).hasSize(1);
       assertThat(client.keyFields.get(0).name.toLowerCase()).isEqualTo("id");
+
+      Field name = client.allFields.stream()
+        .filter(f -> "name".equals(f.name.toLowerCase()))
+        .findAny().orElseThrow(() -> new RuntimeException("No name"));
+
+      assertThat(name.typeLen).isEqualTo(153);
     }
   }
 

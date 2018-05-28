@@ -47,8 +47,6 @@ public class DiffOracleTestOld {
 
     List<Change> changes = Comparer.compare(to, from);
 
-    Comparer.sort(changes);
-
     for (Change change : changes) {
       if (change instanceof CreateRelation) {
         Relation rel = ((CreateRelation) change).relation;

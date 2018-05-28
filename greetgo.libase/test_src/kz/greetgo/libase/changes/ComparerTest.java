@@ -83,7 +83,7 @@ public class ComparerTest {
     AlterField alt = (AlterField)list.get(0);
     assertThat(alt.alters).hasSize(1);
     assertThat(alt.alters).contains(AlterPartPart.DEFAULT);
-    assertThat(alt.field.defaultValue).isEqualTo("ASDxxAA");
+    assertThat(alt.field.defaultValue).isEqualTo("ASDxxDD");
   }
   
   @Test
@@ -104,9 +104,9 @@ public class ComparerTest {
     assertThat(alt.alters).contains(AlterPartPart.DEFAULT);
     assertThat(alt.alters).contains(AlterPartPart.NOT_NULL);
     assertThat(alt.alters).contains(AlterPartPart.TYPE);
-    assertThat(alt.field.defaultValue).isEqualTo("ASDxxAA");
-    assertThat(alt.field.nullable).isEqualTo(false);
-    assertThat(alt.field.type).isEqualTo("int");
+    assertThat(alt.field.defaultValue).isNull();
+    assertThat(alt.field.nullable).isTrue();
+    assertThat(alt.field.type).isEqualTo("int1");
   }
   
   @Test

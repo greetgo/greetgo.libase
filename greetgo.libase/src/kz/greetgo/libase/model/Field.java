@@ -3,42 +3,49 @@ package kz.greetgo.libase.model;
 public class Field {
   public Table owner;
   public String name, type;
+  public int typeLen;
   public boolean nullable = true;
   public String defaultValue;
-  
+
   public String comment;
-  
+
   public Field() {}
-  
-  public Field(Table owner, String name, String type, boolean nullable, String defaultValue) {
+
+  public Field(Table owner, String name, String type, int typeLen, boolean nullable, String defaultValue) {
     this.owner = owner;
     this.name = name;
     this.type = type;
+    this.typeLen = typeLen;
     this.nullable = nullable;
     this.defaultValue = defaultValue;
   }
-  
+
   public Field(Table owner, String name, String type) {
     this.owner = owner;
     this.name = name;
     this.type = type;
   }
-  
+
+  public String fullName() {
+    return owner.name + "/" + name;
+  }
+
   @Override
   public String toString() {
-    return "\n\t\t" + name + ' ' + type + (nullable ? "" :" NOT NULL")
-        + (defaultValue == null ? "" :" DEFAULT " + defaultValue);
+    return "\n\t\t" + name + ' ' + type + " len=" + typeLen + (nullable ? "" : " NOT NULL")
+      + (defaultValue == null ? "" : " DEFAULT " + defaultValue);
   }
-  
+
   @Override
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    result = prime * result + ((name == null) ? 0 :name.hashCode());
-    result = prime * result + ((owner == null) ? 0 :owner.hashCode());
+    result = prime * result + ((name == null) ? 0 : name.hashCode());
+    result = prime * result + ((owner == null) ? 0 : owner.hashCode());
     return result;
   }
-  
+
+  @SuppressWarnings("RedundantIfStatement")
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -50,7 +57,7 @@ public class Field {
     if (!(obj instanceof Field)) {
       return false;
     }
-    Field other = (Field)obj;
+    Field other = (Field) obj;
     if (name == null) {
       if (other.name != null) {
         return false;
@@ -67,7 +74,7 @@ public class Field {
     }
     return true;
   }
-  
+
   public String trimComment() {
     if (comment == null) return "";
     return comment.trim();

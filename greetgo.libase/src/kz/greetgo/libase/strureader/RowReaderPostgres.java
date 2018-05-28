@@ -57,6 +57,8 @@ public class RowReaderPostgres implements RowReader {
     int numPrecision = rs.getInt("numeric_precision");
     int numScale = rs.getInt("numeric_scale");
 
+    ret.typeLen = charLen;
+
     String dataType = rs.getString("data_type");
 
     if (NO_SIZE_COLS.contains(dataType.toUpperCase())) {
