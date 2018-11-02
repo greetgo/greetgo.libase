@@ -25,16 +25,18 @@ public class RowReaderOracle implements RowReader {
   public List<ColumnRow> readAllTableColumns() throws Exception {
 
     String sql = "select * from all_tab_columns"
-      + " where owner = sys_context('USERENV','SESSION_SCHEMA')"
-      + " and table_name not in (select view_name from all_views"
-      + " where owner = sys_context('USERENV','SESSION_SCHEMA'))"
-      + " order by table_name, column_id";
+        + " where owner = sys_context('USERENV','SESSION_SCHEMA')"
+        + " and table_name not in (select view_name from all_views"
+        + " where owner = sys_context('USERENV','SESSION_SCHEMA'))"
+        + " order by table_name, column_id";
 
     //noinspection Duplicates
     try (PreparedStatement ps = connection.prepareStatement(sql)) {
       try (ResultSet rs = ps.executeQuery()) {
         List<ColumnRow> ret = new ArrayList<>();
-        while (rs.next()) ret.add(readColumnRow(rs));
+        while (rs.next()) {
+          ret.add(readColumnRow(rs));
+        }
         return ret;
       }
     }
@@ -56,7 +58,9 @@ public class RowReaderOracle implements RowReader {
     ret.tableName = rs.getString("table_name");
     ret.name = rs.getString("column_name");
     ret.defaultValue = rs.getString("data_default");
-    if (ret.defaultValue != null) ret.defaultValue = ret.defaultValue.trim();
+    if (ret.defaultValue != null) {
+      ret.defaultValue = ret.defaultValue.trim();
+    }
     ret.nullable = "Y".equals(rs.getString("nullable"));
 
     int dataLen = rs.getInt("data_length");
@@ -81,27 +85,31 @@ public class RowReaderOracle implements RowReader {
   }
 
   private String sizeToStr(int size, int scale) {
-    if (size <= 0) return "";
-    if (scale <= 0) return "(" + size + ")";
+    if (size <= 0) {
+      return "";
+    }
+    if (scale <= 0) {
+      return "(" + size + ")";
+    }
     return "(" + size + ", " + scale + ")";
   }
 
   @Override
   public Map<String, PrimaryKeyRow> readAllTablePrimaryKeys() throws Exception {
     String sql = "" +
-      "with ss   as (select sys_context('USERENV','SESSION_SCHEMA') as oo from dual)\n" +
-      ",    cons as (select * from all_constraints, ss where owner = oo and constraint_type = 'P')\n" +
-      ",    cols as (select * from all_cons_columns, ss where owner = oo)\n" +
-      ",    tabs as (select table_name from all_tables, ss where owner = oo)\n" +
-      "SELECT /*+ no_merge(cons) no_merge(cols) no_merge(tabs) */\n" +
-      "  cols.table_name, cols.column_name, cols.position,\n" +
-      "  cons.status, cons.owner\n" +
-      "\n" +
-      "FROM cons, cols,tabs\n" +
-      "where cons.constraint_name = cols.constraint_name\n" +
-      "and cols.table_name = tabs.table_name\n" +
-      "\n" +
-      "order by cols.table_name, cols.position";
+        "with ss   as (select sys_context('USERENV','SESSION_SCHEMA') as oo from dual)\n" +
+        ",    cons as (select * from all_constraints, ss where owner = oo and constraint_type = 'P')\n" +
+        ",    cols as (select * from all_cons_columns, ss where owner = oo)\n" +
+        ",    tabs as (select table_name from all_tables, ss where owner = oo)\n" +
+        "SELECT /*+ no_merge(cons) no_merge(cols) no_merge(tabs) */\n" +
+        "  cols.table_name, cols.column_name, cols.position,\n" +
+        "  cons.status, cons.owner\n" +
+        "\n" +
+        "FROM cons, cols,tabs\n" +
+        "where cons.constraint_name = cols.constraint_name\n" +
+        "and cols.table_name = tabs.table_name\n" +
+        "\n" +
+        "order by cols.table_name, cols.position";
 
     try (PreparedStatement ps = connection.prepareStatement(sql)) {
       try (ResultSet rs = ps.executeQuery()) {
@@ -111,7 +119,9 @@ public class RowReaderOracle implements RowReader {
         while (rs.next()) {
           String tableName = rs.getString("table_name");
           PrimaryKeyRow primaryKey = ret.get(tableName);
-          if (primaryKey == null) ret.put(tableName, primaryKey = new PrimaryKeyRow(tableName));
+          if (primaryKey == null) {
+            ret.put(tableName, primaryKey = new PrimaryKeyRow(tableName));
+          }
           primaryKey.keyFieldNames.add(rs.getString("column_name"));
         }
 
@@ -123,23 +133,23 @@ public class RowReaderOracle implements RowReader {
   @Override
   public Map<String, ForeignKeyRow> readAllForeignKeys() throws Exception {
     String sql = "" +
-      "with    ss as (select sys_context('USERENV','SESSION_SCHEMA') as oo from dual)\n" +
-      ",    colls as (select * from all_cons_columns, ss where owner = oo)\n" +
-      ", foreigns as (select * from all_constraints , ss where owner = oo and r_owner = oo    and constraint_type = 'R')\n" +
-      ",    prims as (select * from all_constraints , ss where owner = oo and r_owner is null and constraint_type = 'P')\n" +
-      "\n" +
-      "select /*+ no_merge(a) no_merge(c) no_merge(c_pk) no_merge(b) */\n" +
-      "\n" +
-      "  a.constraint_name as fk, b.position as i,\n" +
-      "  a.table_name as fromtable, a.column_name as fromcol, \n" +
-      "  c_pk.table_name as totable,  b.column_name as tocol\n" +
-      "\n" +
-      "from colls a, foreigns c, prims c_pk, colls b \n" +
-      "where c_pk.constraint_name = b.constraint_name\n" +
-      "and b.position = a.position\n" +
-      "and c.r_constraint_name = c_pk.constraint_name\n" +
-      "and a.constraint_name = c.constraint_name\n" +
-      "order by fromtable, i\n";
+        "with    ss as (select sys_context('USERENV','SESSION_SCHEMA') as oo from dual)\n" +
+        ",    colls as (select * from all_cons_columns, ss where owner = oo)\n" +
+        ", foreigns as (select * from all_constraints , ss where owner = oo and r_owner = oo    and constraint_type = 'R')\n" +
+        ",    prims as (select * from all_constraints , ss where owner = oo and r_owner is null and constraint_type = 'P')\n" +
+        "\n" +
+        "select /*+ no_merge(a) no_merge(c) no_merge(c_pk) no_merge(b) */\n" +
+        "\n" +
+        "  a.constraint_name as fk, b.position as i,\n" +
+        "  a.table_name as fromtable, a.column_name as fromcol, \n" +
+        "  c_pk.table_name as totable,  b.column_name as tocol\n" +
+        "\n" +
+        "from colls a, foreigns c, prims c_pk, colls b \n" +
+        "where c_pk.constraint_name = b.constraint_name\n" +
+        "and b.position = a.position\n" +
+        "and c.r_constraint_name = c_pk.constraint_name\n" +
+        "and a.constraint_name = c.constraint_name\n" +
+        "order by fromtable, i\n";
 
     try (PreparedStatement ps = connection.prepareStatement(sql)) {
       try (ResultSet rs = ps.executeQuery()) {
@@ -148,7 +158,9 @@ public class RowReaderOracle implements RowReader {
         while (rs.next()) {
           String name = "FK" + rs.getString("fk");
           ForeignKeyRow fk = ret.get(name);
-          if (fk == null) ret.put(name, fk = new ForeignKeyRow(name));
+          if (fk == null) {
+            ret.put(name, fk = new ForeignKeyRow(name));
+          }
           fk.fromTable = rs.getString("fromTable");
           fk.toTable = rs.getString("toTable");
           fk.fromColumns.add(rs.getString("fromCol"));
@@ -163,7 +175,7 @@ public class RowReaderOracle implements RowReader {
   @Override
   public Map<String, SequenceRow> readAllSequences() throws Exception {
     String sql = "select * from all_sequences"
-      + " where sequence_owner = sys_context('USERENV','SESSION_SCHEMA')";
+        + " where sequence_owner = sys_context('USERENV','SESSION_SCHEMA')";
 
     try (PreparedStatement ps = connection.prepareStatement(sql)) {
       try (ResultSet rs = ps.executeQuery()) {
@@ -189,10 +201,11 @@ public class RowReaderOracle implements RowReader {
   }
 
   private void addDependences(Map<String, ViewRow> ret) throws SQLException {
-    String sql = "select * from all_dependencies \n"
-      + "where owner = sys_context('USERENV','SESSION_SCHEMA')\n" //
-      + "and type = 'VIEW'\n"//
-      + "order by name";
+    String sql = "select * from all_dependencies\n"
+        + " where owner = sys_context('USERENV','SESSION_SCHEMA')\n"
+        + " and referenced_owner = sys_context('USERENV','SESSION_SCHEMA')\n"
+        + " and type = 'VIEW'\n"
+        + " order by name";
 
     try (PreparedStatement ps = connection.prepareStatement(sql)) {
       try (ResultSet rs = ps.executeQuery()) {
@@ -200,10 +213,11 @@ public class RowReaderOracle implements RowReader {
         while (rs.next()) {
           String name = rs.getString("name");
           ViewRow view = ret.get(name);
-          if (view == null) throw new NullPointerException("No view " + name);
+          if (view == null) {
+            throw new NullPointerException("No view " + name);
+          }
           view.dependenses.add(rs.getString("referenced_name"));
         }
-
       }
     }
   }
@@ -217,7 +231,7 @@ public class RowReaderOracle implements RowReader {
 
         while (rs.next()) {
           ViewRow s = new ViewRow(rs.getString("view_name"),
-            killSemicolonInEnd(rs.getString("text")));
+              killSemicolonInEnd(rs.getString("text")));
           ret.put(s.name, s);
         }
 
@@ -227,17 +241,21 @@ public class RowReaderOracle implements RowReader {
   }
 
   private static String killSemicolonInEnd(String str) {
-    if (str == null) return null;
+    if (str == null) {
+      return null;
+    }
     str = str.trim();
-    if (str.endsWith(";")) return str.substring(0, str.length() - 1).trim();
+    if (str.endsWith(";")) {
+      return str.substring(0, str.length() - 1).trim();
+    }
     return str;
   }
 
   @Override
   public List<StoreFuncRow> readAllFuncs() throws Exception {
     String sql = "select * from all_source"
-      + " where owner = sys_context('USERENV','SESSION_SCHEMA')" //
-      + " order by name, line";
+        + " where owner = sys_context('USERENV','SESSION_SCHEMA')" //
+        + " order by name, line";
 
     try (PreparedStatement ps = connection.prepareStatement(sql)) {
       try (ResultSet rs = ps.executeQuery()) {
@@ -274,7 +292,7 @@ public class RowReaderOracle implements RowReader {
   @Override
   public Map<String, TriggerRow> readAllTriggers() throws Exception {
     String sql = "select * from all_triggers"
-      + " where owner = sys_context('USERENV','SESSION_SCHEMA')";
+        + " where owner = sys_context('USERENV','SESSION_SCHEMA')";
 
     try (PreparedStatement ps = connection.prepareStatement(sql)) {
       try (ResultSet rs = ps.executeQuery()) {
@@ -299,8 +317,8 @@ public class RowReaderOracle implements RowReader {
   public Map<String, String> readTableComments() throws Exception {
 
     String sql = "select * from all_tab_comments" +
-      "  where owner = sys_context('USERENV','SESSION_SCHEMA')" +
-      "  and comments is not null";
+        "  where owner = sys_context('USERENV','SESSION_SCHEMA')" +
+        "  and comments is not null";
 
     try (PreparedStatement ps = connection.prepareStatement(sql)) {
       try (ResultSet rs = ps.executeQuery()) {
@@ -321,8 +339,8 @@ public class RowReaderOracle implements RowReader {
   public Map<String, String> readColumnComments() throws Exception {
 
     String sql = "select * from all_col_comments" +
-      "  where owner = sys_context('USERENV','SESSION_SCHEMA')" +
-      "  and comments is not null";
+        "  where owner = sys_context('USERENV','SESSION_SCHEMA')" +
+        "  and comments is not null";
 
     try (PreparedStatement ps = connection.prepareStatement(sql)) {
       try (ResultSet rs = ps.executeQuery()) {
@@ -330,7 +348,7 @@ public class RowReaderOracle implements RowReader {
         Map<String, String> ret = new HashMap<>();
         while (rs.next()) {
           ret.put(rs.getString("TABLE_NAME") + '.' + rs.getString("COLUMN_NAME"),
-            rs.getString("COMMENTS"));
+              rs.getString("COMMENTS"));
         }
         return ret;
 
