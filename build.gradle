@@ -6,7 +6,7 @@ buildscript {
   }
 
   dependencies {
-    classpath "kz.greetgo.plugins:greetgo.gradle.plugins:0.0.4"
+    classpath "kz.greetgo.plugins:greetgo.gradle.plugins:0.0.5"
   }
 }
 
@@ -18,6 +18,8 @@ apply plugin: 'idea'
 apply plugin: kz.greetgo.gradle.plugins.ShortJavaPathPlugin
 //noinspection UnnecessaryQualifiedReference
 apply plugin: kz.greetgo.gradle.plugins.GgRepoUploadPlugin
+//noinspection UnnecessaryQualifiedReference
+apply plugin: kz.greetgo.gradle.plugins.MavenUploadPlugin
 
 group = 'kz.greetgo'
 
@@ -62,3 +64,16 @@ idea.module.downloadJavadoc = true
 idea.module.inheritOutputDirs = false
 idea.module.outputDir = file("$buildDir/classes/main/")
 idea.module.testOutputDir = file("$buildDir/classes/test/")
+
+uploadToMavenCentral {
+  description = 'Make comparization of databases and generates deltas'
+  url = 'https://tech.greetgo.kz/test_project.php'
+  scm {
+    url = 'https://github.com/greetgo/test_project'
+  }
+  developer {
+    id = 'pompei'
+    name = 'ekolpakov'
+    email = 'ekolpakov@greet-go.com'
+  }
+}
