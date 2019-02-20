@@ -47,9 +47,7 @@ repositories {
 }
 
 dependencies {
-  compile 'postgresql:postgresql:9.1-901.jdbc4'
-  compile "greetgo.3rd-party:oracle-ojdbc6_g:11.2.0.3"
-
+  testCompile 'postgresql:postgresql:9.1-901.jdbc4'
   testCompile 'org.testng:testng:6.5.1'
   testCompile 'org.easytesting:fest-assert-core:2.0M10'
   testCompile group: 'kz.greetgo.conf', name: 'greetgo.sys_params', version: '1.0.2'
