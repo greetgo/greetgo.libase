@@ -587,7 +587,7 @@ public class RowReaderPostgresTest {
       assertThat(map).containsKey("trigger_set1");
       TriggerRow row = map.get("trigger_set1");
       assertThat(row.tableName).isEqualTo("chair");
-      assertThat(row.actionStatement).isEqualTo("EXECUTE PROCEDURE chair_set_1()");
+      assertThat(row.actionStatement).matches("EXECUTE (PROCEDURE|FUNCTION) chair_set_1\\(\\)");
       assertThat(row.actionOrientation).isEqualTo("ROW");
       assertThat(row.actionTiming).isEqualTo("BEFORE");
       assertThat(row.eventManipulation).isEqualTo("INSERT");
@@ -609,7 +609,7 @@ public class RowReaderPostgresTest {
       assertThat(map).containsKey("trigger_set2");
       TriggerRow row = map.get("trigger_set2");
       assertThat(row.tableName).isEqualTo("chair");
-      assertThat(row.actionStatement).isEqualTo("EXECUTE PROCEDURE moon.chair_set_2()");
+      assertThat(row.actionStatement).matches("EXECUTE (PROCEDURE|FUNCTION) moon.chair_set_2\\(\\)");
       assertThat(row.actionOrientation).isEqualTo("ROW");
       assertThat(row.actionTiming).isEqualTo("BEFORE");
       assertThat(row.eventManipulation).isEqualTo("INSERT");
