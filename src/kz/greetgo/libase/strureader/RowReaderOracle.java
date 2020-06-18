@@ -15,7 +15,7 @@ import java.util.Set;
 @SuppressWarnings("SpellCheckingInspection")
 public class RowReaderOracle implements RowReader {
 
-  private Connection connection;
+  private final Connection connection;
 
   public RowReaderOracle(Connection connection) {
     this.connection = connection;

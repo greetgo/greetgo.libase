@@ -1,5 +1,16 @@
 package kz.greetgo.libase.strureader;
 
+import static java.util.function.UnaryOperator.identity;
+import static java.util.stream.Collectors.toMap;
+import static kz.greetgo.libase.utils.TestUtil.exec;
+import static org.fest.assertions.api.Assertions.assertThat;
+
+import java.sql.Connection;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.Consumer;
 import kz.greetgo.libase.model.DbStru;
 import kz.greetgo.libase.model.Field;
 import kz.greetgo.libase.model.ForeignKey;
@@ -10,18 +21,8 @@ import kz.greetgo.libase.utils.DbWorkerPostgres;
 import org.fest.assertions.data.MapEntry;
 import org.testng.annotations.Test;
 
-import java.sql.Connection;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
-
-import static java.util.function.UnaryOperator.identity;
-import static java.util.stream.Collectors.toMap;
-import static kz.greetgo.libase.utils.TestUtil.exec;
-import static org.fest.assertions.api.Assertions.assertThat;
-
 public class RowReaderPostgresTest {
+
   protected DbWorker dbWorker() {
     return new DbWorkerPostgres();
   }
@@ -66,8 +67,8 @@ public class RowReaderPostgresTest {
       assertThat(client.keyFields.get(0).name.toLowerCase()).isEqualTo("id");
 
       Field name = client.allFields.stream()
-        .filter(f -> "name".equals(f.name.toLowerCase()))
-        .findAny().orElseThrow(() -> new RuntimeException("No name"));
+                                   .filter(f -> "name".equals(f.name.toLowerCase()))
+                                   .findAny().orElseThrow(() -> new RuntimeException("No name"));
 
       assertThat(name.typeLen).isEqualTo(153);
     }
@@ -332,7 +333,7 @@ public class RowReaderPostgresTest {
       assertThat(row.name).isEqualTo("client");
       assertThat(row.dependenses).containsAll(Arrays.asList("client1", "moon.client2"));
       assertThat(row.content.replaceAll("\\s+", " ")).isEqualTo("SELECT c1.id AS id1, c2.id AS id2, c1.code," +
-        " c1.f1, c2.f2 FROM client1 c1, moon.client2 c2 WHERE (c1.code = c2.code)");
+                                                                  " c1.f1, c2.f2 FROM client1 c1, moon.client2 c2 WHERE (c1.code = c2.code)");
     };
   }
 
@@ -347,7 +348,7 @@ public class RowReaderPostgresTest {
       assertThat(row.name).isEqualTo("moon.phone");
       assertThat(row.dependenses).containsAll(Arrays.asList("pencil1", "moon.pencil2"));
       assertThat(row.content.replaceAll("\\s+", " ")).isEqualTo("SELECT c1.id AS id1, c2.id AS id2, c1.code," +
-        " c1.f1, c2.f2 FROM pencil1 c1, moon.pencil2 c2 WHERE (c1.code = c2.code)");
+                                                                  " c1.f1, c2.f2 FROM pencil1 c1, moon.pencil2 c2 WHERE (c1.code = c2.code)");
     };
   }
 
@@ -640,4 +641,66 @@ public class RowReaderPostgresTest {
       c2.accept(map);
     }
   }
+
+  @Test
+  public void foreignKeyBetweenSchemas() throws Exception {
+    DbWorker dbWorker = dbWorker();
+    dbWorker.recreateDb(DbSide.FROM);
+
+    try (Connection con = dbWorker.connection(DbSide.FROM)) {
+      String fkFieldName = "id";
+      String tmp = createTable(con, "tmp", fkFieldName);
+
+      String firstSchema = createSchema(con, "first");
+      String secondSchema = createSchema(con, "second");
+
+      String firstTable = createTableForSchemaWithForeignKey(con, firstSchema, "first_table", tmp, fkFieldName);
+      String secondTable = createTableForSchemaWithForeignKey(con, secondSchema, "second_table", tmp, fkFieldName);
+
+      Map<String, ForeignKeyRow> firstTableFkMap = createRowReader(con).addSchema(firstSchema).readAllForeignKeys();
+
+      assertThat(firstTableFkMap).hasSize(1);
+
+      for (Entry<String, ForeignKeyRow> foreignKeyRow : firstTableFkMap.entrySet()) {
+        assertThat(foreignKeyRow.getValue().fromTable).isEqualTo(fullName(firstSchema, firstTable));
+      }
+
+      ////
+
+      Map<String, ForeignKeyRow> secondTableFkMap = createRowReader(con).addSchema(secondSchema).readAllForeignKeys();
+
+      assertThat(secondTableFkMap).hasSize(1);
+
+      for (Entry<String, ForeignKeyRow> foreignKeyRow : secondTableFkMap.entrySet()) {
+        assertThat(foreignKeyRow.getValue().fromTable).isEqualTo(fullName(secondSchema, secondTable));
+      }
+    }
+
+  }
+
+  private String createTable(Connection con, String tableName, String fieldName) {
+    exec(con, "create table " + tableName + "( " + fieldName + " int  primary key );");
+    return tableName;
+  }
+
+  private String createTableForSchemaWithForeignKey(Connection connection, String schemaName, String tableName,
+                                                    String fkTable, String fkField) {
+    exec(connection,
+         "create table " + schemaName + "." + tableName + "( "
+           + "id int primary key," +
+           "  foreign_key_field int references " + fkTable + " (" + fkField + ")" +
+           ")");
+
+    return tableName;
+  }
+
+  private String createSchema(Connection connection, String schemaName) {
+    exec(connection, "create schema " + schemaName);
+    return schemaName;
+  }
+
+  private static String fullName(String schema, String table) {
+    return schema + "." + table;
+  }
+
 }
